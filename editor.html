@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Level Editor - Game Stage Designer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* 상단 툴바 */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: #16213e;
+            border-bottom: 2px solid #0f3460;
+        }
+
+        .toolbar input[type="text"] {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            background: #0f3460;
+            color: #fff;
+            width: 200px;
+        }
+
+        .toolbar button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #e94560;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #ff6b6b;
+        }
+
+        .toolbar button.secondary {
+            background: #0f3460;
+        }
+
+        .toolbar button.secondary:hover {
+            background: #1a4a7a;
+        }
+
+        /* 메인 컨테이너 */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 52px);
+        }
+
+        /* 도구 패널 */
+        .tool-panel {
+            width: 120px;
+            background: #16213e;
+            padding: 15px 10px;
+            border-right: 2px solid #0f3460;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tool-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 8px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            background: #0f3460;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 11px;
+        }
+
+        .tool-btn:hover {
+            background: #1a4a7a;
+            color: #fff;
+        }
+
+        .tool-btn.active {
+            border-color: #e94560;
+            background: #2a1a3a;
+            color: #fff;
+        }
+
+        .tool-btn .icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .tool-btn .shortcut {
+            font-size: 9px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .tool-btn .sub-type {
+            font-size: 10px;
+            color: #e94560;
+            background: rgba(233, 69, 96, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 3px;
+        }
+
+        /* 캔버스 영역 */
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .canvas-wrapper {
+            flex: 1;
+            overflow: auto;
+            background: #111;
+            position: relative;
+        }
+
+        #editorCanvas {
+            display: block;
+            cursor: crosshair;
+        }
+
+        /* 하단 패널 */
+        .bottom-panel {
+            display: flex;
+            height: 200px;
+            border-top: 2px solid #0f3460;
+        }
+
+        /* 속성 패널 */
+        .property-panel {
+            width: 300px;
+            background: #16213e;
+            padding: 15px;
+            overflow-y: auto;
+            border-right: 2px solid #0f3460;
+        }
+
+        .property-panel h3 {
+            color: #e94560;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .property-group {
+            margin-bottom: 12px;
+        }
+
+        .property-group label {
+            display: block;
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .property-group input, .property-group select {
+            width: 100%;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            background: #0f3460;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .property-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .property-row .property-group {
+            flex: 1;
+        }
+
+        /* JSON 패널 */
+        .json-panel {
+            flex: 1;
+            background: #0d1117;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .json-panel h3 {
+            color: #e94560;
+            margin-bottom: 10px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .json-panel h3 button {
+            padding: 4px 10px;
+            font-size: 11px;
+            background: #238636;
+        }
+
+        .json-panel h3 button:hover {
+            background: #2ea043;
+        }
+
+        #jsonOutput {
+            flex: 1;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            color: #c9d1d9;
+            overflow: auto;
+            resize: none;
+        }
+
+        /* 서브 도구 패널 - 플로팅 */
+        .sub-tool-panel {
+            display: none;
+            position: fixed;
+            top: 70px;
+            left: 140px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #1a1a3a 0%, #2a2a5a 100%);
+            border-radius: 12px;
+            border: 2px solid #e94560;
+            box-shadow: 0 8px 32px rgba(233, 69, 96, 0.3);
+            z-index: 100;
+            min-width: 200px;
+        }
+
+        .sub-tool-panel.active {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sub-tool-panel label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            color: #e94560;
+            margin-bottom: 10px;
+        }
+
+        .sub-tool-panel select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #4a4a8a;
+            border-radius: 8px;
+            background: #0f3460;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sub-tool-panel select:hover {
+            border-color: #e94560;
+            background: #1a4a7a;
+        }
+
+        .sub-tool-panel select:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+        }
+
+        .sub-tool-panel select option {
+            padding: 10px;
+            font-size: 14px;
+            background: #16213e;
+        }
+
+        /* 줌 컨트롤 */
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: auto;
+            color: #888;
+            font-size: 12px;
+        }
+
+        .zoom-controls button {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            font-size: 16px;
+        }
+
+        /* 상태바 */
+        .status-bar {
+            padding: 5px 15px;
+            background: #0f3460;
+            font-size: 11px;
+            color: #888;
+            display: flex;
+            gap: 20px;
+        }
+
+        .status-bar span {
+            color: #aaa;
+        }
+
+        /* 히든 파일 인풋 */
+        #fileInput {
+            display: none;
+        }
+
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #16213e;
+            padding: 25px;
+            border-radius: 8px;
+            min-width: 400px;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+
+        .modal-content .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+    </style>
+</head>
+<body>
+    <!-- 상단 툴바 -->
+    <div class="toolbar">
+        <input type="text" id="stageName" placeholder="파일명 (예: Stage001)" value="Stage000" style="width: 140px;">
+        <input type="text" id="stageDisplayName" placeholder="맵 이름 (예: 초원 지대)" value="" style="width: 160px;">
+        <button onclick="saveJSON()">저장 (JSON)</button>
+        <button class="secondary" onclick="loadJSON()">불러오기</button>
+        <button class="secondary" onclick="newStage()">새로 만들기</button>
+        <button class="secondary" onclick="copyToClipboard()">클립보드 복사</button>
+        <button onclick="applyToGameJS()" style="background: #238636;">game.js 적용</button>
+        <button onclick="previewMap()" style="background: #9333ea;">미리보기</button>
+        <button class="secondary" onclick="setDefaultFolder()" title="저장/불러오기 기본 폴더 설정">📁 폴더 설정</button>
+        <span id="folderStatus" style="color: #888; font-size: 11px; margin-left: 5px;"></span>
+        <input type="file" id="fileInput" accept=".json" onchange="loadJSON(event)">
+
+        <div class="zoom-controls">
+            <button class="secondary" onclick="zoomOut()">-</button>
+            <span id="zoomLevel">100%</span>
+            <button class="secondary" onclick="zoomIn()">+</button>
+            <button class="secondary" onclick="resetZoom()">Reset</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- 도구 패널 -->
+        <div class="tool-panel">
+            <div class="tool-btn active" data-tool="select" onclick="setTool('select')">
+                <span class="icon">🖱️</span>
+                <span>선택</span>
+                <span class="shortcut">[1]</span>
+            </div>
+            <div class="tool-btn" data-tool="platform" onclick="setTool('platform')">
+                <span class="icon">📦</span>
+                <span>플랫폼</span>
+                <span class="shortcut">[2]</span>
+            </div>
+            <div class="tool-btn" data-tool="monster" onclick="setTool('monster')">
+                <span class="icon">👾</span>
+                <span>몬스터</span>
+                <span class="sub-type" id="monsterTypeLabel"></span>
+                <span class="shortcut">[3]</span>
+            </div>
+            <div class="tool-btn" data-tool="item" onclick="setTool('item')">
+                <span class="icon">⭐</span>
+                <span>아이템</span>
+                <span class="sub-type" id="itemTypeLabel"></span>
+                <span class="shortcut">[4]</span>
+            </div>
+            <div class="tool-btn" data-tool="portal" onclick="setTool('portal')">
+                <span class="icon">🌀</span>
+                <span>포탈</span>
+                <span class="shortcut">[5]</span>
+            </div>
+            <div class="tool-btn" data-tool="spawner" onclick="setTool('spawner')">
+                <span class="icon">💀</span>
+                <span>스포너</span>
+                <span class="sub-type" id="spawnerTypeLabel"></span>
+                <span class="shortcut">[6]</span>
+            </div>
+            <div class="tool-btn" data-tool="ladder" onclick="setTool('ladder')">
+                <span class="icon">🪜</span>
+                <span>사다리</span>
+                <span class="shortcut">[7]</span>
+            </div>
+            <div class="tool-btn" data-tool="playerStart" onclick="setTool('playerStart')">
+                <span class="icon">🏃</span>
+                <span>시작점</span>
+                <span class="shortcut">[8]</span>
+            </div>
+
+            <!-- 서브 도구 패널들 -->
+            <div class="sub-tool-panel" id="monsterSubTool">
+                <label>🎯 몬스터 선택 (ID)</label>
+                <select id="monsterType" onchange="updateSubTypeLabel('monster')">
+                </select>
+            </div>
+
+            <div class="sub-tool-panel" id="itemSubTool">
+                <label>🎯 아이템 타입 선택</label>
+                <select id="itemType" onchange="updateSubTypeLabel('item')">
+                    <option value="potion">❤️ 포션</option>
+                    <option value="lightning">⚡ 번개</option>
+                    <option value="fireball">🔥 화염구</option>
+                </select>
+            </div>
+
+            <div class="sub-tool-panel" id="spawnerSubTool">
+                <label>🎯 스포너 몬스터 선택 (ID)</label>
+                <select id="spawnerType" onchange="updateSubTypeLabel('spawner')">
+                </select>
+                <label>⏱️ 스폰 주기 (초)</label>
+                <input type="number" id="spawnerInterval" value="5" min="1" max="60" step="0.5">
+                <label>👾 최대 몬스터 수</label>
+                <input type="number" id="spawnerMaxMonsters" value="2" min="1" max="10">
+            </div>
+        </div>
+
+        <!-- 캔버스 영역 -->
+        <div class="canvas-container">
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <canvas id="editorCanvas"></canvas>
+            </div>
+
+            <!-- 하단 패널 -->
+            <div class="bottom-panel">
+                <!-- 속성 패널 -->
+                <div class="property-panel">
+                    <h3>속성</h3>
+                    <div id="propertyContent">
+                        <p style="color: #666; font-size: 12px;">오브젝트를 선택하세요</p>
+                    </div>
+                </div>
+
+                <!-- 배경 설정 패널 -->
+                <div class="property-panel" style="width: 250px;">
+                    <h3>배경 설정</h3>
+                    <div class="property-row">
+                        <div class="property-group">
+                            <label>하늘 상단</label>
+                            <input type="color" id="bgSkyTop" value="#87CEEB" onchange="updateBackground()">
+                        </div>
+                        <div class="property-group">
+                            <label>하늘 하단</label>
+                            <input type="color" id="bgSkyBottom" value="#E0F6FF" onchange="updateBackground()">
+                        </div>
+                    </div>
+                    <div class="property-group">
+                        <label>배경 프리셋</label>
+                        <select id="bgPreset" onchange="applyBgPreset()">
+                            <option value="custom">사용자 정의</option>
+                            <option value="grassland">초원</option>
+                            <option value="cave">동굴</option>
+                            <option value="desert">사막</option>
+                            <option value="night">밤</option>
+                            <option value="sunset">석양</option>
+                        </select>
+                    </div>
+                    <div class="property-group">
+                        <label>산 색상</label>
+                        <input type="color" id="bgMountainColor1" value="#9DC183" onchange="updateBackground()" style="width: 45%;">
+                        <input type="color" id="bgMountainColor2" value="#7CAF6B" onchange="updateBackground()" style="width: 45%;">
+                    </div>
+                </div>
+
+                <!-- JSON 패널 -->
+                <div class="json-panel">
+                    <h3>
+                        JSON 출력
+                        <button onclick="copyToClipboard()">복사</button>
+                    </h3>
+                    <textarea id="jsonOutput" readonly></textarea>
+                </div>
+            </div>
+
+            <!-- 상태바 -->
+            <div class="status-bar">
+                <div>마우스: <span id="mousePos">0, 0</span></div>
+                <div>줌: <span id="zoomStatus">100%</span></div>
+                <div>도구: <span id="toolStatus">선택</span></div>
+                <div>오브젝트: <span id="objectCount">0</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 포탈 설정 모달 -->
+    <div class="modal" id="portalModal">
+        <div class="modal-content">
+            <h3>포탈 설정</h3>
+            <div class="property-group">
+                <label>이동할 스테이지 (Stage 폴더의 JSON 파일명)</label>
+                <input type="text" id="portalTargetStage" placeholder="예: Stage001" value="Stage001">
+                <div style="margin-top: 8px; font-size: 11px; color: #888;">
+                    기존 스테이지: <span id="stageList" style="color: #4a9eff;">Lobby, Stage001, Stage002, Stage003</span>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="secondary" onclick="closePortalModal()">취소</button>
+                <button onclick="confirmPortal()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 몬스터 데이터 로드 -->
+    <script src="Monster/Monster.js"></script>
+
+    <script>
+        // 상수
+        const WORLD_WIDTH = 1920;
+        const WORLD_HEIGHT = 810;
+        const GRID_SIZE = 32;
+        const FLOOR_Y = 760;
+
+        // 캔버스 설정
+        const canvas = document.getElementById('editorCanvas');
+        const ctx = canvas.getContext('2d');
+        const wrapper = document.getElementById('canvasWrapper');
+
+        // 몬스터 데이터
+        let monsterData = [];
+
+        // 에디터 상태
+        let zoom = 1;
+        let currentTool = 'select';
+        let selectedObject = null;
+        let isDragging = false;
+        let isDrawing = false;
+        let dragStart = { x: 0, y: 0 };
+        let drawStart = { x: 0, y: 0 };
+        let pendingPortalPos = null;
+
+        // 스테이지 데이터
+        let stageData = {
+            number: 0,
+            displayName: "",
+            playerStart: { x: 100, y: 500 },
+            platforms: [],
+            monsters: [],
+            items: [],
+            portals: [],
+            spawners: [],
+            ladders: [],
+            background: {
+                skyTop: '#87CEEB',
+                skyBottom: '#E0F6FF',
+                mountains: [
+                    { x1: 0, peak: 150, x2: 300, color: '#9DC183' },
+                    { x1: 200, peak: 200, x2: 600, color: '#7CAF6B' },
+                    { x1: 500, peak: 120, x2: 900, color: '#9DC183' },
+                    { x1: 800, peak: 180, x2: 1200, color: '#7CAF6B' },
+                    { x1: 1100, peak: 140, x2: 1400, color: '#9DC183' },
+                    { x1: 1300, peak: 160, x2: 1600, color: '#7CAF6B' }
+                ]
+            }
+        };
+
+        // Undo 히스토리
+        const MAX_HISTORY = 20;
+        let history = [];
+
+        function saveState() {
+            const state = JSON.parse(JSON.stringify(stageData));
+            history.push(state);
+            if (history.length > MAX_HISTORY) {
+                history.shift();
+            }
+        }
+
+        function undo() {
+            if (history.length === 0) return;
+            stageData = history.pop();
+            selectedObject = null;
+            updateJSON();
+            render();
+        }
+
+        // 몬스터 데이터 로드
+        function loadMonsterData() {
+            if (typeof MONSTER_DATA !== 'undefined') {
+                monsterData = MONSTER_DATA;
+                console.log('몬스터 데이터 로드 완료:', monsterData.length + '종');
+            } else {
+                console.error('몬스터 데이터 로드 실패: MONSTER_DATA 없음');
+                monsterData = [
+                    { id: 100001, type: 'slime', name: '슬라임' },
+                    { id: 100002, type: 'mushroom', name: '버섯' },
+                    { id: 100003, type: 'ghost', name: '유령' }
+                ];
+            }
+            populateMonsterDropdowns();
+        }
+
+        // 몬스터 드롭다운 채우기
+        function populateMonsterDropdowns() {
+            const monsterSelect = document.getElementById('monsterType');
+            const spawnerSelect = document.getElementById('spawnerType');
+
+            const optionsHtml = monsterData.map(m =>
+                `<option value="${m.id}">${m.name} (${m.id})</option>`
+            ).join('');
+
+            monsterSelect.innerHTML = optionsHtml;
+            spawnerSelect.innerHTML = optionsHtml;
+
+            // 라벨 업데이트
+            updateSubTypeLabel('monster');
+            updateSubTypeLabel('spawner');
+            updateSubTypeLabel('item');
+        }
+
+        // 몬스터 ID로 정보 가져오기
+        function getMonsterById(id) {
+            return monsterData.find(m => m.id === parseInt(id) || m.id === id);
+        }
+
+        // 몬스터 이름 가져오기
+        function getMonsterName(id) {
+            const monster = getMonsterById(id);
+            return monster ? monster.name : id;
+        }
+
+        // 초기화
+        function init() {
+            loadMonsterData();
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            canvas.addEventListener('mousedown', onMouseDown);
+            canvas.addEventListener('mousemove', onMouseMove);
+            canvas.addEventListener('mouseup', onMouseUp);
+            canvas.addEventListener('contextmenu', onContextMenu);
+            canvas.addEventListener('wheel', onWheel);
+
+            document.addEventListener('keydown', onKeyDown);
+
+            // 저장된 폴더 설정 복원
+            restoreSavedFolder();
+
+            updateBgUI();
+            updateJSON();
+            render();
+        }
+
+        function resizeCanvas() {
+            canvas.width = WORLD_WIDTH * zoom;
+            canvas.height = WORLD_HEIGHT * zoom;
+            render();
+        }
+
+        // 서브타입 라벨 업데이트
+        function updateSubTypeLabel(type) {
+            const itemNames = { potion: '포션', lightning: '번개', fireball: '화염구' };
+
+            const selectId = type + 'Type';
+            const labelId = type + 'TypeLabel';
+            const value = document.getElementById(selectId).value;
+            const label = document.getElementById(labelId);
+
+            if (label) {
+                if (type === 'item') {
+                    label.textContent = itemNames[value] || value;
+                } else {
+                    label.textContent = getMonsterName(value);
+                }
+            }
+        }
+
+        // 도구 설정
+        function setTool(tool) {
+            currentTool = tool;
+            selectedObject = null;
+
+            // 버튼 스타일 업데이트
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tool === tool) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // 서브 도구 패널 표시
+            document.querySelectorAll('.sub-tool-panel').forEach(p => p.classList.remove('active'));
+            if (tool === 'monster') {
+                document.getElementById('monsterSubTool').classList.add('active');
+            } else if (tool === 'item') {
+                document.getElementById('itemSubTool').classList.add('active');
+            } else if (tool === 'spawner') {
+                document.getElementById('spawnerSubTool').classList.add('active');
+            }
+
+            // 커서 업데이트
+            canvas.style.cursor = tool === 'select' ? 'default' : 'crosshair';
+
+            // 상태바 업데이트
+            const toolNames = {
+                select: '선택', platform: '플랫폼', monster: '몬스터',
+                item: '아이템', portal: '포탈', spawner: '스포너', ladder: '사다리', playerStart: '시작점'
+            };
+            document.getElementById('toolStatus').textContent = toolNames[tool];
+
+            updatePropertyPanel();
+            render();
+        }
+
+        // 마우스 이벤트
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) / zoom,
+                y: (e.clientY - rect.top) / zoom
+            };
+        }
+
+        function snapToGrid(value) {
+            return Math.round(value / GRID_SIZE) * GRID_SIZE;
+        }
+
+        function onMouseDown(e) {
+            const pos = getMousePos(e);
+
+            if (e.button === 0) { // 좌클릭
+                if (currentTool === 'select') {
+                    // 오브젝트 선택
+                    selectedObject = findObjectAt(pos.x, pos.y);
+                    if (selectedObject) {
+                        saveState();
+                        isDragging = true;
+                        dragStart = { x: pos.x - selectedObject.obj.x, y: pos.y - selectedObject.obj.y };
+                    }
+                } else if (currentTool === 'platform') {
+                    // 플랫폼 그리기 시작
+                    isDrawing = true;
+                    drawStart = { x: snapToGrid(pos.x), y: snapToGrid(pos.y) };
+                } else if (currentTool === 'ladder') {
+                    // 사다리 그리기 시작 (위에서 아래로 드래그)
+                    isDrawing = true;
+                    drawStart = { x: snapToGrid(pos.x), y: snapToGrid(pos.y) };
+                } else if (currentTool === 'monster') {
+                    addMonster(pos.x, pos.y);
+                } else if (currentTool === 'item') {
+                    addItem(pos.x, pos.y);
+                } else if (currentTool === 'portal') {
+                    openPortalModal(pos.x, pos.y);
+                } else if (currentTool === 'spawner') {
+                    addSpawner(pos.x, pos.y);
+                } else if (currentTool === 'playerStart') {
+                    setPlayerStart(pos.x, pos.y);
+                }
+            }
+
+            updatePropertyPanel();
+            render();
+        }
+
+        function onMouseMove(e) {
+            const pos = getMousePos(e);
+
+            // 상태바 업데이트
+            document.getElementById('mousePos').textContent =
+                `${Math.round(pos.x)}, ${Math.round(pos.y)}`;
+
+            if (isDragging && selectedObject) {
+                selectedObject.obj.x = snapToGrid(pos.x - dragStart.x);
+                selectedObject.obj.y = snapToGrid(pos.y - dragStart.y);
+                updateJSON();
+                updatePropertyPanel();
+            }
+
+            render();
+
+            // 플랫폼 미리보기
+            if (isDrawing && currentTool === 'platform') {
+                const endX = snapToGrid(pos.x);
+                const endY = snapToGrid(pos.y);
+                const previewRect = {
+                    x: Math.min(drawStart.x, endX),
+                    y: Math.min(drawStart.y, endY),
+                    width: Math.abs(endX - drawStart.x) || GRID_SIZE,
+                    height: Math.abs(endY - drawStart.y) || GRID_SIZE
+                };
+
+                ctx.save();
+                ctx.scale(zoom, zoom);
+                ctx.fillStyle = 'rgba(139, 90, 43, 0.5)';
+                ctx.strokeStyle = '#fff';
+                ctx.setLineDash([5, 5]);
+                ctx.fillRect(previewRect.x, previewRect.y, previewRect.width, previewRect.height);
+                ctx.strokeRect(previewRect.x, previewRect.y, previewRect.width, previewRect.height);
+                ctx.restore();
+            }
+
+            // 사다리 미리보기
+            if (isDrawing && currentTool === 'ladder') {
+                const endY = snapToGrid(pos.y);
+                const ladderX = drawStart.x;
+                const ladderY = Math.min(drawStart.y, endY);
+                const ladderHeight = Math.abs(endY - drawStart.y) || GRID_SIZE * 2;
+
+                ctx.save();
+                ctx.scale(zoom, zoom);
+                ctx.strokeStyle = 'rgba(139, 69, 19, 0.7)';
+                ctx.lineWidth = 4;
+                ctx.setLineDash([5, 5]);
+                // 세로 레일
+                ctx.beginPath();
+                ctx.moveTo(ladderX - 12, ladderY);
+                ctx.lineTo(ladderX - 12, ladderY + ladderHeight);
+                ctx.moveTo(ladderX + 12, ladderY);
+                ctx.lineTo(ladderX + 12, ladderY + ladderHeight);
+                ctx.stroke();
+                // 가로 발판
+                ctx.lineWidth = 3;
+                const rungSpacing = 20;
+                for (let ry = ladderY + 10; ry < ladderY + ladderHeight; ry += rungSpacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(ladderX - 12, ry);
+                    ctx.lineTo(ladderX + 12, ry);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+        }
+
+        function onMouseUp(e) {
+            const pos = getMousePos(e);
+
+            if (isDrawing && currentTool === 'platform') {
+                const endX = snapToGrid(pos.x);
+                const endY = snapToGrid(pos.y);
+                const platform = {
+                    x: Math.min(drawStart.x, endX),
+                    y: Math.min(drawStart.y, endY),
+                    width: Math.abs(endX - drawStart.x) || GRID_SIZE,
+                    height: Math.abs(endY - drawStart.y) || GRID_SIZE
+                };
+
+                if (platform.width >= GRID_SIZE && platform.height >= GRID_SIZE) {
+                    saveState();
+                    stageData.platforms.push(platform);
+                    updateJSON();
+                }
+            }
+
+            if (isDrawing && currentTool === 'ladder') {
+                const endY = snapToGrid(pos.y);
+                const ladder = {
+                    x: drawStart.x,
+                    y: Math.min(drawStart.y, endY),
+                    height: Math.abs(endY - drawStart.y) || GRID_SIZE * 4
+                };
+
+                if (ladder.height >= GRID_SIZE * 2) {
+                    saveState();
+                    stageData.ladders.push(ladder);
+                    updateJSON();
+                }
+            }
+
+            isDragging = false;
+            isDrawing = false;
+            render();
+        }
+
+        function onContextMenu(e) {
+            e.preventDefault();
+            const pos = getMousePos(e);
+            const obj = findObjectAt(pos.x, pos.y);
+
+            if (obj) {
+                deleteObject(obj);
+            }
+        }
+
+        function onWheel(e) {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                zoomIn();
+            } else {
+                zoomOut();
+            }
+        }
+
+        // 오브젝트 찾기
+        function findObjectAt(x, y) {
+            // 플레이어 시작점
+            const ps = stageData.playerStart;
+            if (x >= ps.x - 16 && x <= ps.x + 48 && y >= ps.y - 48 && y <= ps.y) {
+                return { type: 'playerStart', obj: ps };
+            }
+
+            // 포탈
+            for (let i = stageData.portals.length - 1; i >= 0; i--) {
+                const p = stageData.portals[i];
+                if (x >= p.x - 25 && x <= p.x + 25 && y >= p.y - 50 && y <= p.y) {
+                    return { type: 'portal', obj: p, index: i };
+                }
+            }
+
+            // 스포너
+            for (let i = stageData.spawners.length - 1; i >= 0; i--) {
+                const s = stageData.spawners[i];
+                if (x >= s.x - 20 && x <= s.x + 20 && y >= s.y - 20 && y <= s.y + 20) {
+                    return { type: 'spawner', obj: s, index: i };
+                }
+            }
+
+            // 아이템
+            for (let i = stageData.items.length - 1; i >= 0; i--) {
+                const item = stageData.items[i];
+                if (x >= item.x - 15 && x <= item.x + 15 && y >= item.y - 15 && y <= item.y + 15) {
+                    return { type: 'item', obj: item, index: i };
+                }
+            }
+
+            // 몬스터
+            for (let i = stageData.monsters.length - 1; i >= 0; i--) {
+                const m = stageData.monsters[i];
+                if (x >= m.x - 20 && x <= m.x + 20 && y >= m.y - 20 && y <= m.y + 20) {
+                    return { type: 'monster', obj: m, index: i };
+                }
+            }
+
+            // 사다리
+            for (let i = stageData.ladders.length - 1; i >= 0; i--) {
+                const l = stageData.ladders[i];
+                if (x >= l.x - 16 && x <= l.x + 16 && y >= l.y && y <= l.y + l.height) {
+                    return { type: 'ladder', obj: l, index: i };
+                }
+            }
+
+            // 플랫폼
+            for (let i = stageData.platforms.length - 1; i >= 0; i--) {
+                const p = stageData.platforms[i];
+                if (x >= p.x && x <= p.x + p.width && y >= p.y && y <= p.y + p.height) {
+                    return { type: 'platform', obj: p, index: i };
+                }
+            }
+
+            return null;
+        }
+
+        // 오브젝트 추가
+        function addMonster(x, y) {
+            saveState();
+            const monsterId = parseInt(document.getElementById('monsterType').value);
+            stageData.monsters.push({
+                x: snapToGrid(x),
+                y: snapToGrid(y),
+                monsterId: monsterId
+            });
+            updateJSON();
+        }
+
+        function addItem(x, y) {
+            saveState();
+            const type = document.getElementById('itemType').value;
+            stageData.items.push({
+                x: snapToGrid(x),
+                y: snapToGrid(y),
+                type: type
+            });
+            updateJSON();
+        }
+
+        function addSpawner(x, y) {
+            saveState();
+            const monsterId = parseInt(document.getElementById('spawnerType').value);
+            const intervalSec = parseFloat(document.getElementById('spawnerInterval').value) || 5;
+            const maxMonsters = parseInt(document.getElementById('spawnerMaxMonsters').value) || 2;
+            stageData.spawners.push({
+                x: snapToGrid(x),
+                y: snapToGrid(y),
+                monsterId: monsterId,
+                spawnInterval: Math.round(intervalSec * 60),
+                maxMonsters: maxMonsters
+            });
+            updateJSON();
+        }
+
+        function setPlayerStart(x, y) {
+            saveState();
+            stageData.playerStart.x = snapToGrid(x);
+            stageData.playerStart.y = snapToGrid(y);
+            updateJSON();
+        }
+
+        function openPortalModal(x, y) {
+            pendingPortalPos = { x: snapToGrid(x), y: snapToGrid(y) };
+            document.getElementById('portalTargetStage').value = 'Stage001';
+            document.getElementById('portalModal').classList.add('active');
+        }
+
+        function closePortalModal() {
+            document.getElementById('portalModal').classList.remove('active');
+            pendingPortalPos = null;
+        }
+
+        function confirmPortal() {
+            if (pendingPortalPos) {
+                const targetStage = document.getElementById('portalTargetStage').value.trim();
+
+                if (!targetStage) {
+                    alert('이동할 스테이지를 입력해주세요. (예: Stage001)');
+                    return;
+                }
+
+                saveState();
+                stageData.portals.push({
+                    x: pendingPortalPos.x,
+                    y: pendingPortalPos.y,
+                    targetStage: targetStage
+                });
+                updateJSON();
+                render();
+            }
+            closePortalModal();
+        }
+
+        // 오브젝트 삭제
+        function deleteObject(obj) {
+            if (!obj) return;
+            saveState();
+
+            if (obj.type === 'platform') {
+                stageData.platforms.splice(obj.index, 1);
+            } else if (obj.type === 'monster') {
+                stageData.monsters.splice(obj.index, 1);
+            } else if (obj.type === 'item') {
+                stageData.items.splice(obj.index, 1);
+            } else if (obj.type === 'portal') {
+                stageData.portals.splice(obj.index, 1);
+            } else if (obj.type === 'spawner') {
+                stageData.spawners.splice(obj.index, 1);
+            } else if (obj.type === 'ladder') {
+                stageData.ladders.splice(obj.index, 1);
+            }
+            // playerStart는 삭제 불가
+
+            selectedObject = null;
+            updateJSON();
+            updatePropertyPanel();
+            render();
+        }
+
+        // 키보드 이벤트
+        function onKeyDown(e) {
+            // 입력 필드에서는 단축키 비활성화
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            switch(e.key) {
+                case '1': setTool('select'); break;
+                case '2': setTool('platform'); break;
+                case '3': setTool('monster'); break;
+                case '4': setTool('item'); break;
+                case '5': setTool('portal'); break;
+                case '6': setTool('spawner'); break;
+                case '7': setTool('ladder'); break;
+                case '8': setTool('playerStart'); break;
+                case 'Delete':
+                case 'Backspace':
+                    if (selectedObject) {
+                        deleteObject(selectedObject);
+                    }
+                    break;
+                case 's':
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        saveJSON();
+                    }
+                    break;
+                case 'c':
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        copyToClipboard();
+                    }
+                    break;
+                case 'z':
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        undo();
+                    }
+                    break;
+            }
+        }
+
+        // 줌
+        function zoomIn() {
+            if (zoom < 2) {
+                zoom = Math.min(2, zoom + 0.1);
+                updateZoom();
+            }
+        }
+
+        function zoomOut() {
+            if (zoom > 0.3) {
+                zoom = Math.max(0.3, zoom - 0.1);
+                updateZoom();
+            }
+        }
+
+        function resetZoom() {
+            zoom = 1;
+            updateZoom();
+        }
+
+        function updateZoom() {
+            const zoomPercent = Math.round(zoom * 100) + '%';
+            document.getElementById('zoomLevel').textContent = zoomPercent;
+            document.getElementById('zoomStatus').textContent = zoomPercent;
+            resizeCanvas();
+        }
+
+        // 속성 패널 업데이트
+        function updatePropertyPanel() {
+            const content = document.getElementById('propertyContent');
+
+            if (!selectedObject) {
+                content.innerHTML = '<p style="color: #666; font-size: 12px;">오브젝트를 선택하세요</p>';
+                return;
+            }
+
+            const obj = selectedObject.obj;
+            let html = '';
+
+            html += `<div class="property-row">
+                <div class="property-group">
+                    <label>X</label>
+                    <input type="number" value="${obj.x}" onchange="updateProperty('x', this.value)">
+                </div>
+                <div class="property-group">
+                    <label>Y</label>
+                    <input type="number" value="${obj.y}" onchange="updateProperty('y', this.value)">
+                </div>
+            </div>`;
+
+            if (selectedObject.type === 'platform') {
+                html += `<div class="property-row">
+                    <div class="property-group">
+                        <label>너비</label>
+                        <input type="number" value="${obj.width}" onchange="updateProperty('width', this.value)">
+                    </div>
+                    <div class="property-group">
+                        <label>높이</label>
+                        <input type="number" value="${obj.height}" onchange="updateProperty('height', this.value)">
+                    </div>
+                </div>`;
+            }
+
+            if (selectedObject.type === 'monster') {
+                const monsterInfo = getMonsterById(obj.monsterId);
+                const monsterOptions = monsterData.map(m =>
+                    `<option value="${m.id}" ${obj.monsterId === m.id ? 'selected' : ''}>${m.name} (${m.id})</option>`
+                ).join('');
+                html += `<div class="property-group">
+                    <label>몬스터</label>
+                    <select onchange="updateProperty('monsterId', parseInt(this.value))">
+                        ${monsterOptions}
+                    </select>
+                </div>`;
+            }
+
+            if (selectedObject.type === 'item') {
+                html += `<div class="property-group">
+                    <label>타입</label>
+                    <select onchange="updateProperty('type', this.value)">
+                        <option value="potion" ${obj.type === 'potion' ? 'selected' : ''}>포션</option>
+                        <option value="lightning" ${obj.type === 'lightning' ? 'selected' : ''}>번개</option>
+                        <option value="fireball" ${obj.type === 'fireball' ? 'selected' : ''}>화염구</option>
+                    </select>
+                </div>`;
+            }
+
+            if (selectedObject.type === 'portal') {
+                html += `<div class="property-group">
+                    <label>이동할 스테이지 (파일명)</label>
+                    <input type="text" value="${obj.targetStage}" onchange="updateProperty('targetStage', this.value)">
+                </div>`;
+            }
+
+            if (selectedObject.type === 'spawner') {
+                const monsterOptions = monsterData.map(m =>
+                    `<option value="${m.id}" ${obj.monsterId === m.id ? 'selected' : ''}>${m.name} (${m.id})</option>`
+                ).join('');
+                html += `<div class="property-group">
+                    <label>몬스터</label>
+                    <select onchange="updateProperty('monsterId', parseInt(this.value))">
+                        ${monsterOptions}
+                    </select>
+                </div>`;
+                const intervalSec = (obj.spawnInterval || 300) / 60;
+                html += `<div class="property-group">
+                    <label>스폰 주기 (초)</label>
+                    <input type="number" value="${intervalSec}" min="1" max="60" step="0.5" onchange="updateProperty('spawnInterval', Math.round(parseFloat(this.value) * 60))">
+                </div>`;
+                html += `<div class="property-group">
+                    <label>최대 몬스터 수</label>
+                    <input type="number" value="${obj.maxMonsters || 2}" min="1" max="10" onchange="updateProperty('maxMonsters', parseInt(this.value))">
+                </div>`;
+            }
+
+            if (selectedObject.type === 'ladder') {
+                html += `<div class="property-group">
+                    <label>높이</label>
+                    <input type="number" value="${obj.height}" onchange="updateProperty('height', this.value)">
+                </div>`;
+            }
+
+            content.innerHTML = html;
+        }
+
+        function updateProperty(prop, value) {
+            if (!selectedObject) return;
+            saveState();
+
+            if (prop === 'x' || prop === 'y' || prop === 'width' || prop === 'height') {
+                value = parseInt(value);
+            }
+
+            selectedObject.obj[prop] = value;
+            updateJSON();
+            render();
+        }
+
+        // JSON 관리
+        function updateJSON() {
+            const stageName = document.getElementById('stageName').value;
+            stageData.number = parseInt(stageName.replace(/\D/g, '')) || 0;
+            stageData.displayName = document.getElementById('stageDisplayName').value;
+
+            const output = JSON.stringify(stageData, null, 2);
+            document.getElementById('jsonOutput').value = output;
+
+            // 오브젝트 카운트 업데이트
+            const count = stageData.platforms.length + stageData.monsters.length +
+                         stageData.items.length + stageData.portals.length + stageData.spawners.length +
+                         stageData.ladders.length;
+            document.getElementById('objectCount').textContent = count;
+        }
+
+        // 저장된 디렉토리 핸들 (File System Access API용)
+        let savedDirectoryHandle = null;
+        const DB_NAME = 'EditorSettingsDB';
+        const STORE_NAME = 'settings';
+
+        // IndexedDB 초기화
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME);
+                    }
+                };
+            });
+        }
+
+        // 디렉토리 핸들 저장
+        async function saveDirectoryHandle(handle) {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.put(handle, 'directoryHandle');
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // 디렉토리 핸들 불러오기
+        async function loadDirectoryHandle() {
+            const db = await openDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.get('directoryHandle');
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // 저장된 폴더 복원
+        async function restoreSavedFolder() {
+            try {
+                const handle = await loadDirectoryHandle();
+                if (handle) {
+                    // 권한 확인 및 요청
+                    const permission = await handle.queryPermission({ mode: 'readwrite' });
+                    if (permission === 'granted') {
+                        savedDirectoryHandle = handle;
+                        document.getElementById('folderStatus').textContent = '📂 ' + handle.name;
+                    } else if (permission === 'prompt') {
+                        // 사용자가 첫 상호작용 시 권한 요청
+                        document.getElementById('folderStatus').textContent = '📂 ' + handle.name + ' (클릭하여 권한 허용)';
+                        document.getElementById('folderStatus').style.cursor = 'pointer';
+                        document.getElementById('folderStatus').onclick = async () => {
+                            const newPermission = await handle.requestPermission({ mode: 'readwrite' });
+                            if (newPermission === 'granted') {
+                                savedDirectoryHandle = handle;
+                                document.getElementById('folderStatus').textContent = '📂 ' + handle.name;
+                                document.getElementById('folderStatus').style.cursor = 'default';
+                                document.getElementById('folderStatus').onclick = null;
+                            }
+                        };
+                    }
+                }
+            } catch (err) {
+                console.warn('저장된 폴더 복원 실패:', err);
+            }
+        }
+
+        // 기본 폴더 설정 함수
+        async function setDefaultFolder() {
+            if (!('showDirectoryPicker' in window)) {
+                alert('이 브라우저는 폴더 선택 기능을 지원하지 않습니다.');
+                return;
+            }
+
+            try {
+                savedDirectoryHandle = await window.showDirectoryPicker({
+                    mode: 'readwrite'
+                });
+                const folderName = savedDirectoryHandle.name;
+                document.getElementById('folderStatus').textContent = '📂 ' + folderName;
+                document.getElementById('folderStatus').style.cursor = 'default';
+                document.getElementById('folderStatus').onclick = null;
+
+                // IndexedDB에 저장
+                await saveDirectoryHandle(savedDirectoryHandle);
+
+                alert('기본 폴더가 설정되었습니다: ' + folderName + '\n\n이제 저장/불러오기 시 이 폴더가 기본으로 열립니다.\n(에디터를 다시 열어도 유지됩니다)');
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('폴더 선택 오류:', err);
+                }
+            }
+        }
+
+        async function saveJSON() {
+            updateJSON();
+            const data = JSON.stringify(stageData, null, 2);
+            const stageName = document.getElementById('stageName').value || 'Stage000';
+            const fileName = stageName.replace(/[^a-zA-Z0-9가-힣_-]/g, '_') + '.json';
+
+            // File System Access API 지원 확인
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        startIn: savedDirectoryHandle || 'documents',
+                        types: [{
+                            description: 'JSON Files',
+                            accept: { 'application/json': ['.json'] }
+                        }]
+                    });
+
+                    const writable = await handle.createWritable();
+                    await writable.write(data);
+                    await writable.close();
+
+                    alert('저장 완료: ' + handle.name);
+                    return;
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        return; // 사용자가 취소함
+                    }
+                    console.warn('File System Access API 실패, 기본 다운로드로 전환:', err);
+                }
+            }
+
+            // 폴백: 기존 다운로드 방식
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function loadJSON(e) {
+            let file;
+
+            // File System Access API 지원 시 파일 선택 대화상자 사용
+            if ('showOpenFilePicker' in window && !e) {
+                try {
+                    const [handle] = await window.showOpenFilePicker({
+                        startIn: savedDirectoryHandle || 'documents',
+                        types: [{
+                            description: 'JSON Files',
+                            accept: { 'application/json': ['.json'] }
+                        }]
+                    });
+                    file = await handle.getFile();
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                    console.warn('File System Access API 실패:', err);
+                    document.getElementById('fileInput').click();
+                    return;
+                }
+            } else if (e && e.target && e.target.files) {
+                file = e.target.files[0];
+                if (!file) return;
+            } else {
+                document.getElementById('fileInput').click();
+                return;
+            }
+
+            // 파일명에서 .json 제거하여 기본 이름으로 사용
+            const fileNameWithoutExt = file.name.replace(/\.json$/i, '');
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    const loadedNumber = data.number || parseInt(fileNameWithoutExt.replace(/\D/g, '')) || 0;
+                    const defaultBg = {
+                        skyTop: '#87CEEB',
+                        skyBottom: '#E0F6FF',
+                        mountains: [
+                            { x1: 0, peak: 150, x2: 300, color: '#9DC183' },
+                            { x1: 200, peak: 200, x2: 600, color: '#7CAF6B' },
+                            { x1: 500, peak: 120, x2: 900, color: '#9DC183' },
+                            { x1: 800, peak: 180, x2: 1200, color: '#7CAF6B' },
+                            { x1: 1100, peak: 140, x2: 1400, color: '#9DC183' },
+                            { x1: 1300, peak: 160, x2: 1600, color: '#7CAF6B' }
+                        ]
+                    };
+                    history = [];
+                    stageData = {
+                        number: loadedNumber,
+                        displayName: data.displayName || "",
+                        playerStart: data.playerStart || { x: 100, y: 500 },
+                        platforms: data.platforms || [],
+                        monsters: data.monsters || [],
+                        items: data.items || [],
+                        portals: data.portals || [],
+                        spawners: data.spawners || [],
+                        ladders: data.ladders || [],
+                        background: data.background || defaultBg
+                    };
+                    document.getElementById('stageName').value = fileNameWithoutExt || `Stage${String(loadedNumber).padStart(3, '0')}`;
+                    document.getElementById('stageDisplayName').value = stageData.displayName;
+                    updateBgUI();
+                    selectedObject = null;
+                    updateJSON();
+                    updatePropertyPanel();
+                    render();
+                    alert('불러오기 완료: ' + file.name);
+                } catch (err) {
+                    alert('JSON 파일 파싱 오류: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            if (e && e.target) e.target.value = '';
+        }
+
+        function copyToClipboard() {
+            updateJSON();
+            const text = document.getElementById('jsonOutput').value;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('JSON이 클립보드에 복사되었습니다!');
+            });
+        }
+
+        // game.js 파일 핸들 저장
+        let gameJSHandle = null;
+
+        function generateStageJS() {
+            const stageName = document.getElementById('stageName').value || 'Stage000';
+
+            let js = `    "${stageName}": {\n`;
+            js += `        number: ${stageData.number},\n`;
+            js += `        displayName: "${stageData.displayName}",\n`;
+            js += `        playerStart: { x: ${stageData.playerStart.x}, y: ${stageData.playerStart.y} },\n`;
+
+            js += `        platforms: [\n`;
+            stageData.platforms.forEach((p, i) => {
+                js += `            { x: ${p.x}, y: ${p.y}, width: ${p.width}, height: ${p.height} }`;
+                js += i < stageData.platforms.length - 1 ? ',\n' : '\n';
+            });
+            js += `        ],\n`;
+
+            js += `        portals: [\n`;
+            stageData.portals.forEach((p, i) => {
+                js += `            { x: ${p.x}, y: ${p.y}, targetStage: "${p.targetStage}" }`;
+                js += i < stageData.portals.length - 1 ? ',\n' : '\n';
+            });
+            js += `        ],\n`;
+
+            js += `        items: [\n`;
+            stageData.items.forEach((item, i) => {
+                js += `            { x: ${item.x}, y: ${item.y}, type: '${item.type}' }`;
+                js += i < stageData.items.length - 1 ? ',\n' : '\n';
+            });
+            js += `        ],\n`;
+
+            js += `        monsters: [\n`;
+            stageData.monsters.forEach((m, i) => {
+                js += `            { x: ${m.x}, y: ${m.y}, monsterId: ${m.monsterId} }`;
+                js += i < stageData.monsters.length - 1 ? ',\n' : '\n';
+            });
+            js += `        ],\n`;
+
+            js += `        spawners: [\n`;
+            stageData.spawners.forEach((s, i) => {
+                const interval = s.spawnInterval || 300;
+                const max = s.maxMonsters || 2;
+                js += `            { x: ${s.x}, y: ${s.y}, monsterId: ${s.monsterId}, spawnInterval: ${interval}, maxMonsters: ${max} }`;
+                js += i < stageData.spawners.length - 1 ? ',\n' : '\n';
+            });
+            js += `        ],\n`;
+
+            js += `        ladders: [\n`;
+            stageData.ladders.forEach((l, i) => {
+                js += `            { x: ${l.x}, y: ${l.y}, height: ${l.height} }`;
+                js += i < stageData.ladders.length - 1 ? ',\n' : '\n';
+            });
+            js += `        ],\n`;
+
+            const bg = stageData.background;
+            js += `        background: {\n`;
+            js += `            skyTop: '${bg.skyTop}',\n`;
+            js += `            skyBottom: '${bg.skyBottom}',\n`;
+            js += `            mountains: [\n`;
+            bg.mountains.forEach((m, i) => {
+                js += `                { x1: ${m.x1}, peak: ${m.peak}, x2: ${m.x2}, color: '${m.color}' }`;
+                js += i < bg.mountains.length - 1 ? ',\n' : '\n';
+            });
+            js += `            ]\n`;
+            js += `        }\n`;
+            js += `    }`;
+
+            return { stageName, js };
+        }
+
+        async function applyToGameJS() {
+            updateJSON();
+
+            if (!('showOpenFilePicker' in window)) {
+                alert('이 브라우저는 파일 직접 수정을 지원하지 않습니다.');
+                return;
+            }
+
+            try {
+                // game.js 파일 선택 (처음 한 번만)
+                if (!gameJSHandle) {
+                    alert('game.js 파일을 선택해주세요.');
+                    const [handle] = await window.showOpenFilePicker({
+                        types: [{ description: 'JavaScript Files', accept: { 'text/javascript': ['.js'] } }]
+                    });
+                    gameJSHandle = handle;
+                }
+
+                // 파일 읽기
+                const file = await gameJSHandle.getFile();
+                let content = await file.text();
+
+                const { stageName, js } = generateStageJS();
+
+                // 해당 스테이지 찾아서 교체
+                const stageRegex = new RegExp(
+                    `(\\s*"${stageName}"\\s*:\\s*\\{[\\s\\S]*?\\n    \\})`,
+                    'g'
+                );
+
+                if (stageRegex.test(content)) {
+                    // 기존 스테이지 교체
+                    content = content.replace(stageRegex, js);
+                } else {
+                    // 새 스테이지 추가 (stages 객체의 마지막 }; 앞에)
+                    const insertPoint = content.lastIndexOf('};');
+                    if (insertPoint !== -1) {
+                        // 마지막 스테이지 뒤에 콤마 추가 필요
+                        const beforeInsert = content.substring(0, insertPoint);
+                        const lastBraceIndex = beforeInsert.lastIndexOf('}');
+                        if (lastBraceIndex !== -1 && !beforeInsert.substring(lastBraceIndex).includes(',')) {
+                            content = beforeInsert.substring(0, lastBraceIndex + 1) + ',' + beforeInsert.substring(lastBraceIndex + 1) + js + '\n' + content.substring(insertPoint);
+                        } else {
+                            content = beforeInsert + js + ',\n' + content.substring(insertPoint);
+                        }
+                    }
+                }
+
+                // 파일 쓰기
+                const writable = await gameJSHandle.createWritable();
+                await writable.write(content);
+                await writable.close();
+
+                alert(`✅ game.js에 "${stageName}" 스테이지가 적용되었습니다!\n\n게임을 새로고침하면 변경사항이 반영됩니다.`);
+
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+                console.error('game.js 수정 실패:', err);
+                alert('game.js 수정 실패: ' + err.message);
+                gameJSHandle = null;
+            }
+        }
+
+        function previewMap() {
+            updateJSON();
+            localStorage.setItem('editorPreviewStage', JSON.stringify(stageData));
+            window.open('index.html?preview=1', '_blank');
+        }
+
+        function newStage() {
+            if (!confirm('현재 작업을 지우고 새 스테이지를 만드시겠습니까?')) return;
+
+            history = [];
+            stageData = {
+                number: 0,
+                displayName: "",
+                playerStart: { x: 100, y: 500 },
+                platforms: [],
+                monsters: [],
+                items: [],
+                portals: [],
+                spawners: [],
+                ladders: [],
+                background: {
+                    skyTop: '#87CEEB',
+                    skyBottom: '#E0F6FF',
+                    mountains: [
+                        { x1: 0, peak: 150, x2: 300, color: '#9DC183' },
+                        { x1: 200, peak: 200, x2: 600, color: '#7CAF6B' },
+                        { x1: 500, peak: 120, x2: 900, color: '#9DC183' },
+                        { x1: 800, peak: 180, x2: 1200, color: '#7CAF6B' },
+                        { x1: 1100, peak: 140, x2: 1400, color: '#9DC183' },
+                        { x1: 1300, peak: 160, x2: 1600, color: '#7CAF6B' }
+                    ]
+                }
+            };
+            document.getElementById('stageName').value = "Stage000";
+            document.getElementById('stageDisplayName').value = stageData.displayName;
+            updateBgUI();
+            selectedObject = null;
+            updateJSON();
+            updatePropertyPanel();
+            render();
+        }
+
+        // 배경 UI 업데이트
+        function updateBgUI() {
+            document.getElementById('bgSkyTop').value = stageData.background.skyTop;
+            document.getElementById('bgSkyBottom').value = stageData.background.skyBottom;
+            if (stageData.background.mountains.length >= 2) {
+                document.getElementById('bgMountainColor1').value = stageData.background.mountains[0].color;
+                document.getElementById('bgMountainColor2').value = stageData.background.mountains[1].color;
+            }
+        }
+
+        // 배경 업데이트
+        function updateBackground() {
+            saveState();
+            stageData.background.skyTop = document.getElementById('bgSkyTop').value;
+            stageData.background.skyBottom = document.getElementById('bgSkyBottom').value;
+            const color1 = document.getElementById('bgMountainColor1').value;
+            const color2 = document.getElementById('bgMountainColor2').value;
+            stageData.background.mountains.forEach((m, i) => {
+                m.color = i % 2 === 0 ? color1 : color2;
+            });
+            document.getElementById('bgPreset').value = 'custom';
+            updateJSON();
+            render();
+        }
+
+        // 배경 프리셋 적용
+        function applyBgPreset() {
+            const preset = document.getElementById('bgPreset').value;
+            const presets = {
+                grassland: { skyTop: '#87CEEB', skyBottom: '#E0F6FF', mt1: '#9DC183', mt2: '#7CAF6B' },
+                cave: { skyTop: '#1a1a2e', skyBottom: '#2d2d44', mt1: '#3d3d5c', mt2: '#2d2d44' },
+                desert: { skyTop: '#f4a460', skyBottom: '#ffe4b5', mt1: '#deb887', mt2: '#d2b48c' },
+                night: { skyTop: '#0a0a23', skyBottom: '#1a1a3a', mt1: '#2a2a4a', mt2: '#1a1a3a' },
+                sunset: { skyTop: '#ff7e5f', skyBottom: '#feb47b', mt1: '#8B4513', mt2: '#A0522D' }
+            };
+            if (preset === 'custom' || !presets[preset]) return;
+
+            saveState();
+            const p = presets[preset];
+            stageData.background.skyTop = p.skyTop;
+            stageData.background.skyBottom = p.skyBottom;
+            stageData.background.mountains.forEach((m, i) => {
+                m.color = i % 2 === 0 ? p.mt1 : p.mt2;
+            });
+            updateBgUI();
+            updateJSON();
+            render();
+        }
+
+        // 렌더링
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.scale(zoom, zoom);
+
+            // 배경 (하늘)
+            const bg = stageData.background;
+            const gradient = ctx.createLinearGradient(0, 0, 0, WORLD_HEIGHT);
+            gradient.addColorStop(0, bg.skyTop);
+            gradient.addColorStop(1, bg.skyBottom);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+            // 산 그리기
+            if (bg.mountains) {
+                bg.mountains.forEach(mt => {
+                    ctx.fillStyle = mt.color;
+                    ctx.beginPath();
+                    ctx.moveTo(mt.x1, FLOOR_Y);
+                    ctx.lineTo((mt.x1 + mt.x2) / 2, FLOOR_Y - mt.peak);
+                    ctx.lineTo(mt.x2, FLOOR_Y);
+                    ctx.fill();
+                });
+            }
+
+            // 그리드
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= WORLD_WIDTH; x += GRID_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, WORLD_HEIGHT);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= WORLD_HEIGHT; y += GRID_SIZE) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(WORLD_WIDTH, y);
+                ctx.stroke();
+            }
+
+            // 바닥선
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, FLOOR_Y);
+            ctx.lineTo(WORLD_WIDTH, FLOOR_Y);
+            ctx.stroke();
+
+            // 바닥
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(0, FLOOR_Y, WORLD_WIDTH, WORLD_HEIGHT - FLOOR_Y);
+
+            // 플랫폼
+            stageData.platforms.forEach((p, i) => {
+                const isSelected = selectedObject && selectedObject.type === 'platform' && selectedObject.index === i;
+
+                ctx.fillStyle = '#8B5A2B';
+                ctx.fillRect(p.x, p.y, p.width, p.height);
+
+                ctx.strokeStyle = isSelected ? '#ff0' : '#654321';
+                ctx.lineWidth = isSelected ? 3 : 2;
+                ctx.strokeRect(p.x, p.y, p.width, p.height);
+
+                // 플랫폼 표면
+                ctx.fillStyle = '#228B22';
+                ctx.fillRect(p.x, p.y, p.width, 5);
+            });
+
+            // 몬스터
+            stageData.monsters.forEach((m, i) => {
+                const isSelected = selectedObject && selectedObject.type === 'monster' && selectedObject.index === i;
+                const monsterInfo = getMonsterById(m.monsterId);
+                const monsterType = monsterInfo ? monsterInfo.type : 'slime';
+                drawMonster(m.x, m.y, monsterType, isSelected, monsterInfo);
+            });
+
+            // 아이템
+            stageData.items.forEach((item, i) => {
+                const isSelected = selectedObject && selectedObject.type === 'item' && selectedObject.index === i;
+                drawItem(item.x, item.y, item.type, isSelected);
+            });
+
+            // 포탈
+            stageData.portals.forEach((p, i) => {
+                const isSelected = selectedObject && selectedObject.type === 'portal' && selectedObject.index === i;
+                drawPortal(p.x, p.y, p.targetStage, isSelected);
+            });
+
+            // 스포너
+            stageData.spawners.forEach((s, i) => {
+                const isSelected = selectedObject && selectedObject.type === 'spawner' && selectedObject.index === i;
+                const monsterInfo = getMonsterById(s.monsterId);
+                const monsterName = monsterInfo ? monsterInfo.name : 'Unknown';
+                drawSpawner(s.x, s.y, monsterName, isSelected);
+            });
+
+            // 사다리
+            stageData.ladders.forEach((l, i) => {
+                const isSelected = selectedObject && selectedObject.type === 'ladder' && selectedObject.index === i;
+                drawLadder(l.x, l.y, l.height, isSelected);
+            });
+
+            // 플레이어 시작점
+            const isPlayerSelected = selectedObject && selectedObject.type === 'playerStart';
+            drawPlayerStart(stageData.playerStart.x, stageData.playerStart.y, isPlayerSelected);
+
+            // 경계선
+            ctx.strokeStyle = '#ff0000';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([10, 5]);
+            ctx.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+            ctx.setLineDash([]);
+
+            ctx.restore();
+        }
+
+        function drawMonster(x, y, type, selected, monsterInfo) {
+            ctx.save();
+
+            // 몬스터 크기 (테이블에서 가져오거나 기본값 사용)
+            const width = monsterInfo ? monsterInfo.width : 40;
+            const height = monsterInfo ? monsterInfo.height : 36;
+            const scale = Math.max(width, height) / 40; // 기본 크기 대비 스케일
+
+            if (type === 'slime') {
+                ctx.fillStyle = '#44ff44';
+                ctx.beginPath();
+                ctx.ellipse(x, y - height/3, width/2, height/2.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.fillRect(x - width/5, y - height/2.5, 4 * scale, 4 * scale);
+                ctx.fillRect(x + width/10, y - height/2.5, 4 * scale, 4 * scale);
+            } else if (type === 'mushroom') {
+                ctx.fillStyle = '#ffe4c4';
+                ctx.fillRect(x - width/5, y - height/2, width/2.5, height/2);
+                ctx.fillStyle = '#ff4444';
+                ctx.beginPath();
+                ctx.ellipse(x, y - height/1.6, width/2, height/3, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(x - width/5, y - height/1.4, 4 * scale, 0, Math.PI * 2);
+                ctx.arc(x + width/5, y - height/1.8, 3 * scale, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (type === 'ghost') {
+                ctx.fillStyle = 'rgba(200, 200, 255, 0.8)';
+                ctx.beginPath();
+                ctx.ellipse(x, y - height/3, width/2, height/2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.fillRect(x - width/5, y - height/2, 5 * scale, 5 * scale);
+                ctx.fillRect(x + width/12, y - height/2, 5 * scale, 5 * scale);
+            } else if (type === 'ghostBoss') {
+                // 보스 유령 몸통 (보라색)
+                ctx.fillStyle = 'rgba(106, 13, 173, 0.85)';
+                ctx.beginPath();
+                ctx.ellipse(x, y - height/3, width/2, height/2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // 왕관
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.moveTo(x - width/3, y - height/1.5);
+                ctx.lineTo(x - width/4, y - height/1.2);
+                ctx.lineTo(x - width/8, y - height/1.4);
+                ctx.lineTo(x, y - height/1.1);
+                ctx.lineTo(x + width/8, y - height/1.4);
+                ctx.lineTo(x + width/4, y - height/1.2);
+                ctx.lineTo(x + width/3, y - height/1.5);
+                ctx.closePath();
+                ctx.fill();
+                // 눈 (노란색)
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(x - width/5, y - height/2, 5 * scale, 5 * scale);
+                ctx.fillRect(x + width/12, y - height/2, 5 * scale, 5 * scale);
+            } else if (type === 'ghostSlave') {
+                // 노예 유령 몸통 (초록색)
+                ctx.fillStyle = 'rgba(32, 178, 170, 0.7)';
+                ctx.beginPath();
+                ctx.ellipse(x, y - height/3, width/2, height/2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // 눈 (빨간색)
+                ctx.fillStyle = '#ff3333';
+                ctx.fillRect(x - width/5, y - height/2, 4 * scale, 4 * scale);
+                ctx.fillRect(x + width/12, y - height/2, 4 * scale, 4 * scale);
+            }
+
+            // 몬스터 이름 표시
+            if (monsterInfo) {
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(monsterInfo.name, x, y + 15);
+            }
+
+            if (selected) {
+                ctx.strokeStyle = '#ff0';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x - width/2 - 5, y - height - 5, width + 10, height + 25);
+            }
+
+            ctx.restore();
+        }
+
+        function drawItem(x, y, type, selected) {
+            ctx.save();
+
+            if (type === 'potion') {
+                ctx.fillStyle = '#ff6666';
+                ctx.beginPath();
+                ctx.moveTo(x, y - 20);
+                ctx.lineTo(x + 10, y - 10);
+                ctx.lineTo(x + 10, y + 10);
+                ctx.lineTo(x - 10, y + 10);
+                ctx.lineTo(x - 10, y - 10);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(x - 5, y - 25, 10, 8);
+            } else if (type === 'lightning') {
+                ctx.fillStyle = '#ffff00';
+                ctx.beginPath();
+                ctx.moveTo(x + 5, y - 20);
+                ctx.lineTo(x - 10, y);
+                ctx.lineTo(x, y);
+                ctx.lineTo(x - 5, y + 20);
+                ctx.lineTo(x + 10, y);
+                ctx.lineTo(x, y);
+                ctx.closePath();
+                ctx.fill();
+            } else if (type === 'fireball') {
+                ctx.fillStyle = '#ff6600';
+                ctx.beginPath();
+                ctx.arc(x, y, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffff00';
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            if (selected) {
+                ctx.strokeStyle = '#ff0';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x - 18, y - 28, 36, 56);
+            }
+
+            ctx.restore();
+        }
+
+        function drawPortal(x, y, targetStage, selected) {
+            ctx.save();
+
+            // 포탈 이펙트
+            ctx.fillStyle = 'rgba(138, 43, 226, 0.7)';
+            ctx.beginPath();
+            ctx.ellipse(x, y - 25, 25, 35, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(75, 0, 130, 0.8)';
+            ctx.beginPath();
+            ctx.ellipse(x, y - 25, 15, 25, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 포탈 아이콘 (중앙)
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🌀', x, y - 25);
+
+            // 이동할 스테이지 표시
+            ctx.fillStyle = '#ffff00';
+            ctx.font = 'bold 11px Arial';
+            ctx.textBaseline = 'alphabetic';
+            const displayName = String(targetStage).length > 12
+                ? String(targetStage).substring(0, 10) + '..'
+                : targetStage;
+            ctx.fillText('→ ' + displayName, x, y + 15);
+
+            if (selected) {
+                ctx.strokeStyle = '#ff0';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x - 30, y - 65, 60, 100);
+            }
+
+            ctx.restore();
+        }
+
+        function drawSpawner(x, y, monsterType, selected) {
+            ctx.save();
+
+            // 스포너 베이스
+            ctx.fillStyle = '#333';
+            ctx.fillRect(x - 20, y - 10, 40, 20);
+
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 타입 표시
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 9px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(monsterType, x, y + 25);
+
+            if (selected) {
+                ctx.strokeStyle = '#ff0';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x - 25, y - 15, 50, 45);
+            }
+
+            ctx.restore();
+        }
+
+        function drawLadder(x, y, height, selected) {
+            ctx.save();
+
+            const ladderWidth = 32;
+            const railWidth = 4;
+            const rungSpacing = 20;
+
+            // 세로 레일 (좌우)
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(x - ladderWidth/2, y, railWidth, height);
+            ctx.fillRect(x + ladderWidth/2 - railWidth, y, railWidth, height);
+
+            // 가로 발판
+            ctx.fillStyle = '#A0522D';
+            for (let ry = y + 10; ry < y + height; ry += rungSpacing) {
+                ctx.fillRect(x - ladderWidth/2, ry, ladderWidth, 4);
+            }
+
+            // 레이블
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 9px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🪜', x, y - 5);
+
+            if (selected) {
+                ctx.strokeStyle = '#ff0';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x - ladderWidth/2 - 5, y - 5, ladderWidth + 10, height + 10);
+            }
+
+            ctx.restore();
+        }
+
+        function drawPlayerStart(x, y, selected) {
+            ctx.save();
+
+            // 플레이어 모양
+            ctx.fillStyle = '#4a90d9';
+            ctx.fillRect(x, y - 32, 24, 24);
+
+            ctx.fillStyle = '#ffdbac';
+            ctx.beginPath();
+            ctx.arc(x + 12, y - 36, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 시작점 표시
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 3]);
+            ctx.beginPath();
+            ctx.arc(x + 12, y - 24, 30, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = '#00ff00';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('START', x + 12, y + 15);
+
+            if (selected) {
+                ctx.strokeStyle = '#ff0';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x - 20, y - 55, 64, 75);
+            }
+
+            ctx.restore();
+        }
+
+        // 초기화 실행
+        init();
+    </script>
+</body>
+</html>

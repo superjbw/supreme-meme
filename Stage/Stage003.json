@@ -1,0 +1,433 @@
+{
+  "number": 3,
+  "displayName": "버려진 사막",
+  "playerStart": {
+    "x": 100,
+    "y": 710
+  },
+  "platforms": [
+    {
+      "x": 50,
+      "y": 690,
+      "width": 180,
+      "height": 30
+    },
+    {
+      "x": 200,
+      "y": 610,
+      "width": 150,
+      "height": 30
+    },
+    {
+      "x": 80,
+      "y": 530,
+      "width": 140,
+      "height": 30
+    },
+    {
+      "x": 250,
+      "y": 450,
+      "width": 160,
+      "height": 30
+    },
+    {
+      "x": 50,
+      "y": 370,
+      "width": 130,
+      "height": 30
+    },
+    {
+      "x": 450,
+      "y": 690,
+      "width": 180,
+      "height": 30
+    },
+    {
+      "x": 550,
+      "y": 590,
+      "width": 150,
+      "height": 30
+    },
+    {
+      "x": 400,
+      "y": 490,
+      "width": 200,
+      "height": 30
+    },
+    {
+      "x": 600,
+      "y": 390,
+      "width": 160,
+      "height": 30
+    },
+    {
+      "x": 800,
+      "y": 660,
+      "width": 200,
+      "height": 30
+    },
+    {
+      "x": 950,
+      "y": 560,
+      "width": 180,
+      "height": 30
+    },
+    {
+      "x": 850,
+      "y": 460,
+      "width": 150,
+      "height": 30
+    },
+    {
+      "x": 1100,
+      "y": 690,
+      "width": 200,
+      "height": 30
+    },
+    {
+      "x": 1250,
+      "y": 590,
+      "width": 180,
+      "height": 30
+    },
+    {
+      "x": 1150,
+      "y": 490,
+      "width": 160,
+      "height": 30
+    },
+    {
+      "x": 1350,
+      "y": 410,
+      "width": 200,
+      "height": 30
+    }
+  ],
+  "monsters": [
+    {
+      "x": 250,
+      "y": 560,
+      "type": "slime"
+    },
+    {
+      "x": 500,
+      "y": 640,
+      "type": "mushroom"
+    },
+    {
+      "x": 580,
+      "y": 540,
+      "type": "mushroom"
+    },
+    {
+      "x": 450,
+      "y": 440,
+      "type": "slime"
+    },
+    {
+      "x": 630,
+      "y": 340,
+      "type": "mushroom"
+    },
+    {
+      "x": 850,
+      "y": 610,
+      "type": "slime"
+    },
+    {
+      "x": 1000,
+      "y": 510,
+      "type": "mushroom"
+    },
+    {
+      "x": 880,
+      "y": 410,
+      "type": "mushroom"
+    },
+    {
+      "x": 1150,
+      "y": 640,
+      "type": "slime"
+    },
+    {
+      "x": 1300,
+      "y": 540,
+      "type": "mushroom"
+    },
+    {
+      "x": 1400,
+      "y": 360,
+      "type": "slime"
+    },
+    {
+      "x": 250,
+      "y": 480,
+      "type": "mushroom"
+    },
+    {
+      "x": 480,
+      "y": 440,
+      "type": "mushroom"
+    },
+    {
+      "x": 900,
+      "y": 610,
+      "type": "mushroom"
+    },
+    {
+      "x": 1200,
+      "y": 440,
+      "type": "mushroom"
+    },
+    {
+      "x": 300,
+      "y": 710,
+      "type": "slime"
+    },
+    {
+      "x": 450,
+      "y": 710,
+      "type": "mushroom"
+    },
+    {
+      "x": 600,
+      "y": 710,
+      "type": "slime"
+    },
+    {
+      "x": 750,
+      "y": 710,
+      "type": "mushroom"
+    },
+    {
+      "x": 900,
+      "y": 710,
+      "type": "slime"
+    },
+    {
+      "x": 1050,
+      "y": 710,
+      "type": "mushroom"
+    },
+    {
+      "x": 1200,
+      "y": 710,
+      "type": "slime"
+    },
+    {
+      "x": 1350,
+      "y": 710,
+      "type": "mushroom"
+    },
+    {
+      "x": 1500,
+      "y": 710,
+      "type": "slime"
+    },
+    {
+      "x": 150,
+      "y": 640,
+      "type": "mushroom"
+    },
+    {
+      "x": 280,
+      "y": 560,
+      "type": "mushroom"
+    },
+    {
+      "x": 120,
+      "y": 480,
+      "type": "slime"
+    },
+    {
+      "x": 320,
+      "y": 400,
+      "type": "mushroom"
+    },
+    {
+      "x": 100,
+      "y": 320,
+      "type": "slime"
+    },
+    {
+      "x": 550,
+      "y": 640,
+      "type": "slime"
+    },
+    {
+      "x": 620,
+      "y": 540,
+      "type": "slime"
+    },
+    {
+      "x": 500,
+      "y": 440,
+      "type": "mushroom"
+    },
+    {
+      "x": 700,
+      "y": 340,
+      "type": "slime"
+    },
+    {
+      "x": 820,
+      "y": 610,
+      "type": "mushroom"
+    },
+    {
+      "x": 970,
+      "y": 510,
+      "type": "slime"
+    },
+    {
+      "x": 920,
+      "y": 410,
+      "type": "slime"
+    },
+    {
+      "x": 1180,
+      "y": 640,
+      "type": "mushroom"
+    },
+    {
+      "x": 1280,
+      "y": 540,
+      "type": "slime"
+    },
+    {
+      "x": 1180,
+      "y": 440,
+      "type": "slime"
+    },
+    {
+      "x": 1450,
+      "y": 360,
+      "type": "mushroom"
+    },
+    {
+      "x": 380,
+      "y": 440,
+      "type": "slime"
+    },
+    {
+      "x": 1100,
+      "y": 640,
+      "type": "slime"
+    },
+    {
+      "x": 950,
+      "y": 610,
+      "type": "slime"
+    },
+    {
+      "x": 1250,
+      "y": 440,
+      "type": "slime"
+    },
+    {
+      "x": 1380,
+      "y": 360,
+      "type": "mushroom"
+    },
+    {
+      "x": 1056,
+      "y": 320,
+      "monsterId": 100004
+    }
+  ],
+  "items": [
+    {
+      "x": 430,
+      "y": 455,
+      "type": "potion"
+    },
+    {
+      "x": 1180,
+      "y": 455,
+      "type": "potion"
+    },
+    {
+      "x": 630,
+      "y": 355,
+      "type": "lightning"
+    },
+    {
+      "x": 1380,
+      "y": 375,
+      "type": "lightning"
+    },
+    {
+      "x": 110,
+      "y": 495,
+      "type": "fireball"
+    },
+    {
+      "x": 880,
+      "y": 425,
+      "type": "fireball"
+    }
+  ],
+  "portals": [
+    {
+      "x": 96,
+      "y": 320,
+      "targetStage": "Stage002",
+      "label": "어둠의 동굴"
+    }
+  ],
+  "spawners": [
+    {
+      "x": 64,
+      "y": 192,
+      "monsterType": "ghost"
+    },
+    {
+      "x": 1490,
+      "y": 680,
+      "monsterType": "ghost"
+    }
+  ],
+  "ladders": [],
+  "background": {
+    "skyTop": "#f4a460",
+    "skyBottom": "#ffe4b5",
+    "mountains": [
+      {
+        "x1": 0,
+        "peak": 150,
+        "x2": 300,
+        "color": "#deb887"
+      },
+      {
+        "x1": 200,
+        "peak": 200,
+        "x2": 600,
+        "color": "#d2b48c"
+      },
+      {
+        "x1": 500,
+        "peak": 120,
+        "x2": 900,
+        "color": "#deb887"
+      },
+      {
+        "x1": 800,
+        "peak": 180,
+        "x2": 1200,
+        "color": "#d2b48c"
+      },
+      {
+        "x1": 1100,
+        "peak": 140,
+        "x2": 1400,
+        "color": "#deb887"
+      },
+      {
+        "x1": 1300,
+        "peak": 160,
+        "x2": 1600,
+        "color": "#d2b48c"
+      }
+    ]
+  }
+}
