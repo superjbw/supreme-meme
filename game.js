@@ -104,7 +104,18 @@ const SLOT_NAMES = {
     helmet: '투구',
     armor: '갑옷',
     weapon: '무기',
-    boots: '신발'
+    boots: '신발',
+    // 재료 타입
+    ore: '광석',
+    herb: '약초',
+    leather: '가죽',
+    wood: '목재',
+    gem: '보석',
+    // 아이템 타입
+    potion: '포션',
+    scroll: '주문서',
+    food: '음식',
+    bomb: '폭탄'
 };
 
 // 장비 UI 상태
@@ -114,6 +125,32 @@ let equipmentButtonBounds = { x: 0, y: 0, width: 80, height: 35 };
 let selectedEquipmentTab = 'weapon'; // 현재 선택된 탭
 const EQUIPMENT_TABS = ['weapon', 'helmet', 'armor', 'boots', 'material', 'item'];
 const TAB_NAMES = { weapon: '무기', helmet: '투구', armor: '갑옷', boots: '신발', material: '재료', item: '아이템' };
+
+// 탭에 따라 올바른 정의를 반환하는 헬퍼 함수
+function getItemDefinition(id, tab) {
+    if (tab === 'material') {
+        return typeof MATERIAL_DEFINITIONS !== 'undefined' ? MATERIAL_DEFINITIONS[id] : null;
+    } else if (tab === 'item') {
+        return typeof ITEM_DEFINITIONS !== 'undefined' ? ITEM_DEFINITIONS[id] : null;
+    } else {
+        return typeof EQUIPMENT_DEFINITIONS !== 'undefined' ? EQUIPMENT_DEFINITIONS[id] : null;
+    }
+}
+
+// ID로 정의를 자동 탐색하는 함수
+function findDefinition(id) {
+    if (typeof EQUIPMENT_DEFINITIONS !== 'undefined' && EQUIPMENT_DEFINITIONS[id]) {
+        return { def: EQUIPMENT_DEFINITIONS[id], category: 'equipment' };
+    }
+    if (typeof MATERIAL_DEFINITIONS !== 'undefined' && MATERIAL_DEFINITIONS[id]) {
+        return { def: MATERIAL_DEFINITIONS[id], category: 'material' };
+    }
+    if (typeof ITEM_DEFINITIONS !== 'undefined' && ITEM_DEFINITIONS[id]) {
+        return { def: ITEM_DEFINITIONS[id], category: 'item' };
+    }
+    return null;
+}
+
 let viewingEquipmentId = null; // 상세 정보 보기 중인 장비 ID
 let viewingEquipmentSlot = null; // 장착 슬롯에서 보는 경우 슬롯 이름
 let inventoryScrollRow = 0; // 인벤토리 스크롤 행 위치
@@ -286,11 +323,25 @@ class Player {
     }
 
     // 인벤토리에 추가 (등급 높은 순으로 정렬, 같은 등급이면 획득 순서)
-    addToInventory(equipmentId) {
-        const item = EQUIPMENT_DEFINITIONS[equipmentId];
-        if (!item) return false;
+    addToInventory(itemId) {
+        const found = findDefinition(itemId);
+        if (!found) return false;
 
-        const slot = item.type;
+        const item = found.def;
+        const category = found.category;
+
+        // 인벤토리 슬롯 결정
+        let slot;
+        if (category === 'equipment') {
+            slot = item.type; // weapon, helmet, armor, boots
+        } else if (category === 'material') {
+            slot = 'material';
+        } else if (category === 'item') {
+            slot = 'item';
+        } else {
+            return false;
+        }
+
         if (this.inventory[slot].length >= this.maxInventoryPerSlot) {
             return false;
         }
@@ -300,8 +351,9 @@ class Player {
         let insertIndex = this.inventory[slot].length; // 기본값: 맨 뒤
 
         for (let i = 0; i < this.inventory[slot].length; i++) {
-            const existingItem = EQUIPMENT_DEFINITIONS[this.inventory[slot][i]];
-            const existingRarityIndex = RARITY_ORDER.indexOf(existingItem.rarity);
+            const existingFound = findDefinition(this.inventory[slot][i]);
+            if (!existingFound) continue;
+            const existingRarityIndex = RARITY_ORDER.indexOf(existingFound.def.rarity);
 
             // 새 아이템의 등급이 더 높으면 (인덱스가 더 낮으면) 여기에 삽입
             if (newRarityIndex < existingRarityIndex) {
@@ -310,7 +362,7 @@ class Player {
             }
         }
 
-        this.inventory[slot].splice(insertIndex, 0, equipmentId);
+        this.inventory[slot].splice(insertIndex, 0, itemId);
         return true;
     }
 
@@ -1038,7 +1090,11 @@ class Monster {
             this.coinValue = data.coinValue || 10;
             this.expGain = data.expGain || 20;
             this.equipDropChance = data.equipDropChance || 0.08;
-            this.maxRarity = data.maxRarity || 'C';
+            this.equipMaxRarity = data.equipMaxRarity || 'C';
+            this.materialDropChance = data.materialDropChance || 0.1;
+            this.materialMaxRarity = data.materialMaxRarity || 'C';
+            this.itemDropChance = data.itemDropChance || 0.05;
+            this.itemMaxRarity = data.itemMaxRarity || 'C';
             this.isHpBig = data.isHpBig || false;
         } else {
             // 기본값 (슬라임)
@@ -1054,7 +1110,11 @@ class Monster {
             this.coinValue = 10;
             this.expGain = 20;
             this.equipDropChance = 0.08;
-            this.maxRarity = 'C';
+            this.equipMaxRarity = 'C';
+            this.materialDropChance = 0.1;
+            this.materialMaxRarity = 'C';
+            this.itemDropChance = 0.05;
+            this.itemMaxRarity = 'C';
             this.isHpBig = false;
         }
 
@@ -1341,6 +1401,30 @@ class Monster {
                     ));
                 }
             }
+
+            // 재료 드랍 (독립 확률)
+            if (Math.random() < this.materialDropChance) {
+                const droppedMaterial = this.getRandomMaterialDrop();
+                if (droppedMaterial) {
+                    equipmentItems.push(new EquipmentItem(
+                        this.x + this.width / 2 - 14 + (Math.random() - 0.5) * 20,
+                        this.y + this.height / 2,
+                        droppedMaterial
+                    ));
+                }
+            }
+
+            // 아이템 드랍 (독립 확률)
+            if (Math.random() < this.itemDropChance) {
+                const droppedItem = this.getRandomItemDrop();
+                if (droppedItem) {
+                    equipmentItems.push(new EquipmentItem(
+                        this.x + this.width / 2 - 14 + (Math.random() - 0.5) * 20,
+                        this.y + this.height / 2,
+                        droppedItem
+                    ));
+                }
+            }
         }
     }
 
@@ -1350,10 +1434,70 @@ class Monster {
 
         // 몬스터별 최대 희귀도 (테이블 데이터 사용)
         const rarityOrder = ['D', 'C', 'B', 'A', 'S', 'SS', 'SR', 'SU'];
-        const maxRarityIndex = rarityOrder.indexOf(this.maxRarity);
+        const maxRarityIndex = rarityOrder.indexOf(this.equipMaxRarity);
 
         for (let id in EQUIPMENT_DEFINITIONS) {
             const def = EQUIPMENT_DEFINITIONS[id];
+            const rarityIndex = rarityOrder.indexOf(def.rarity);
+
+            if (rarityIndex <= maxRarityIndex) {
+                possibleDrops.push({ id, weight: def.dropWeight });
+                totalWeight += def.dropWeight;
+            }
+        }
+
+        let roll = Math.random() * totalWeight;
+        for (let drop of possibleDrops) {
+            roll -= drop.weight;
+            if (roll <= 0) {
+                return drop.id;
+            }
+        }
+
+        return possibleDrops.length > 0 ? possibleDrops[0].id : null;
+    }
+
+    getRandomMaterialDrop() {
+        if (typeof MATERIAL_DEFINITIONS === 'undefined') return null;
+
+        let possibleDrops = [];
+        let totalWeight = 0;
+
+        const rarityOrder = ['D', 'C', 'B', 'A', 'S', 'SS', 'SR', 'SU'];
+        const maxRarityIndex = rarityOrder.indexOf(this.materialMaxRarity);
+
+        for (let id in MATERIAL_DEFINITIONS) {
+            const def = MATERIAL_DEFINITIONS[id];
+            const rarityIndex = rarityOrder.indexOf(def.rarity);
+
+            if (rarityIndex <= maxRarityIndex) {
+                possibleDrops.push({ id, weight: def.dropWeight });
+                totalWeight += def.dropWeight;
+            }
+        }
+
+        let roll = Math.random() * totalWeight;
+        for (let drop of possibleDrops) {
+            roll -= drop.weight;
+            if (roll <= 0) {
+                return drop.id;
+            }
+        }
+
+        return possibleDrops.length > 0 ? possibleDrops[0].id : null;
+    }
+
+    getRandomItemDrop() {
+        if (typeof ITEM_DEFINITIONS === 'undefined') return null;
+
+        let possibleDrops = [];
+        let totalWeight = 0;
+
+        const rarityOrder = ['D', 'C', 'B', 'A', 'S', 'SS', 'SR', 'SU'];
+        const maxRarityIndex = rarityOrder.indexOf(this.itemMaxRarity);
+
+        for (let id in ITEM_DEFINITIONS) {
+            const def = ITEM_DEFINITIONS[id];
             const rarityIndex = rarityOrder.indexOf(def.rarity);
 
             if (rarityIndex <= maxRarityIndex) {
@@ -2653,7 +2797,10 @@ class EquipmentItem {
         this.grounded = isPlaced;
         this.lifeTime = isPlaced ? Infinity : 1200; // 배치: 영구, 드랍: 20초
 
-        this.definition = EQUIPMENT_DEFINITIONS[equipmentId];
+        // 장비, 재료, 아이템 모두 지원
+        const found = findDefinition(equipmentId);
+        this.definition = found ? found.def : null;
+        this.category = found ? found.category : null;
     }
 
     update() {
@@ -4347,7 +4494,7 @@ function drawEquipmentPanel() {
 
         if (actualIndex < displayItems.length) {
             const item = displayItems[actualIndex];
-            const def = EQUIPMENT_DEFINITIONS[item.id];
+            const def = getItemDefinition(item.id, selectedEquipmentTab);
             if (def) {
                 // 아이콘 그리기
                 drawEquipmentIcon(ctx, itemX, itemY, invSlotSize, def.type, def.color);
@@ -4432,8 +4579,10 @@ function drawEquipmentPanel() {
 
 // 장비 상세 정보창 그리기
 function drawEquipmentDetail() {
-    const def = EQUIPMENT_DEFINITIONS[viewingEquipmentId];
-    if (!def) return;
+    const found = findDefinition(viewingEquipmentId);
+    if (!found) return;
+    const def = found.def;
+    const category = found.category;
 
     const detailW = 220;
     const detailH = 200;
@@ -4459,7 +4608,7 @@ function drawEquipmentDetail() {
     ctx.textAlign = 'center';
     ctx.fillText('X', detailX + detailW - 15, detailY + 19);
 
-    // 장비 아이콘
+    // 아이콘
     const iconSize = 50;
     const iconX = detailX + 15;
     const iconY = detailY + 15;
@@ -4476,7 +4625,7 @@ function drawEquipmentDetail() {
     ctx.textAlign = 'left';
     ctx.fillText(def.rarity, iconX + 3, iconY + 14);
 
-    // 장비 이름
+    // 이름
     ctx.fillStyle = RARITY_COLORS[def.rarity];
     ctx.font = 'bold 16px Arial';
     ctx.fillText(def.name, iconX + iconSize + 10, iconY + 20);
@@ -4484,49 +4633,70 @@ function drawEquipmentDetail() {
     // 종류
     ctx.fillStyle = '#AAAAAA';
     ctx.font = '12px Arial';
-    ctx.fillText(SLOT_NAMES[def.type], iconX + iconSize + 10, iconY + 38);
+    const typeName = SLOT_NAMES[def.type] || TAB_NAMES[category] || def.type;
+    ctx.fillText(typeName, iconX + iconSize + 10, iconY + 38);
 
-    // 스탯
+    // 스탯/설명
     ctx.fillStyle = '#FFFFFF';
     ctx.font = '13px Arial';
     let statY = detailY + 85;
 
-    if (def.stats.attackDamage) {
-        ctx.fillText(`공격력: +${def.stats.attackDamage}`, detailX + 20, statY);
-        statY += 20;
-    }
-    if (def.stats.defense) {
-        ctx.fillText(`방어력: +${def.stats.defense}`, detailX + 20, statY);
-        statY += 20;
-    }
-    if (def.stats.maxHp) {
-        ctx.fillText(`최대 HP: +${def.stats.maxHp}`, detailX + 20, statY);
-        statY += 20;
-    }
-    if (def.stats.speed) {
-        ctx.fillText(`속도: +${def.stats.speed.toFixed(1)}`, detailX + 20, statY);
-        statY += 20;
-    }
-    if (def.stats.extraJump) {
-        ctx.fillText(`추가 점프: +${def.stats.extraJump}`, detailX + 20, statY);
-        statY += 20;
+    if (category === 'equipment' && def.stats) {
+        if (def.stats.attackDamage) {
+            ctx.fillText(`공격력: +${def.stats.attackDamage}`, detailX + 20, statY);
+            statY += 20;
+        }
+        if (def.stats.defense) {
+            ctx.fillText(`방어력: +${def.stats.defense}`, detailX + 20, statY);
+            statY += 20;
+        }
+        if (def.stats.maxHp) {
+            ctx.fillText(`최대 HP: +${def.stats.maxHp}`, detailX + 20, statY);
+            statY += 20;
+        }
+        if (def.stats.speed) {
+            ctx.fillText(`속도: +${def.stats.speed.toFixed(1)}`, detailX + 20, statY);
+            statY += 20;
+        }
+        if (def.stats.extraJump) {
+            ctx.fillText(`추가 점프: +${def.stats.extraJump}`, detailX + 20, statY);
+            statY += 20;
+        }
+    } else if (category === 'material') {
+        if (def.description) {
+            ctx.fillText(def.description, detailX + 20, statY);
+            statY += 20;
+        }
+        ctx.fillText(`최대 보유: ${def.stackMax}`, detailX + 20, statY);
+    } else if (category === 'item') {
+        if (def.description) {
+            ctx.fillText(def.description, detailX + 20, statY);
+            statY += 20;
+        }
+        if (def.effect && def.value) {
+            ctx.fillText(`효과: ${def.effect} (${def.value})`, detailX + 20, statY);
+            statY += 20;
+        }
+        ctx.fillText(`최대 보유: ${def.stackMax}`, detailX + 20, statY);
     }
 
-    // 장착/해제 버튼
-    const btnY = detailY + detailH - 40;
-    const btnText = viewingEquipmentSlot ? '해제' : '장착';
-    const btnColor = viewingEquipmentSlot ? '#FF6666' : '#66AA66';
+    // 장착/해제 버튼 (장비만)
+    if (category === 'equipment') {
+        const btnY = detailY + detailH - 40;
+        const btnText = viewingEquipmentSlot ? '해제' : '장착';
+        const btnColor = viewingEquipmentSlot ? '#FF6666' : '#66AA66';
 
-    ctx.fillStyle = btnColor;
-    ctx.fillRect(detailX + 20, btnY, 80, 30);
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(detailX + 20, btnY, 80, 30);
+        ctx.fillStyle = btnColor;
+        ctx.fillRect(detailX + 20, btnY, 80, 30);
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(detailX + 20, btnY, 80, 30);
 
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 14px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(btnText, detailX + 60, btnY + 20);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(btnText, detailX + 60, btnY + 20);
+    }
 
     ctx.textAlign = 'left';
 }
@@ -4593,6 +4763,99 @@ function drawEquipmentIcon(ctx, x, y, size, slotType, color) {
         ctx.lineTo(cx + s * 0.7, cy + s * 0.5);
         ctx.lineTo(cx + s * 0.7, cy - s * 0.5);
         ctx.closePath();
+        ctx.fill();
+    } else if (slotType === 'ore') {
+        // 광석 아이콘 (육각형)
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const angle = (i * 60 - 30) * Math.PI / 180;
+            const px = cx + s * 0.7 * Math.cos(angle);
+            const py = cy + s * 0.7 * Math.sin(angle);
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+    } else if (slotType === 'herb') {
+        // 약초 아이콘 (잎사귀)
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + s * 0.6);
+        ctx.quadraticCurveTo(cx - s * 0.8, cy, cx, cy - s * 0.6);
+        ctx.quadraticCurveTo(cx + s * 0.8, cy, cx, cy + s * 0.6);
+        ctx.fill();
+        // 줄기
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + s * 0.6);
+        ctx.lineTo(cx, cy + s * 0.9);
+        ctx.stroke();
+    } else if (slotType === 'leather') {
+        // 가죽 아이콘 (두루마리 형태)
+        ctx.fillRect(cx - s * 0.5, cy - s * 0.4, s, s * 0.8);
+        ctx.beginPath();
+        ctx.arc(cx - s * 0.5, cy - s * 0.2, s * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + s * 0.5, cy + s * 0.2, s * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (slotType === 'wood') {
+        // 목재 아이콘 (통나무)
+        ctx.fillRect(cx - s * 0.6, cy - s * 0.25, s * 1.2, s * 0.5);
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath();
+        ctx.arc(cx + s * 0.6, cy, s * 0.25, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (slotType === 'gem') {
+        // 보석 아이콘 (다이아몬드)
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - s * 0.7);
+        ctx.lineTo(cx + s * 0.5, cy - s * 0.2);
+        ctx.lineTo(cx + s * 0.3, cy + s * 0.7);
+        ctx.lineTo(cx - s * 0.3, cy + s * 0.7);
+        ctx.lineTo(cx - s * 0.5, cy - s * 0.2);
+        ctx.closePath();
+        ctx.fill();
+    } else if (slotType === 'potion') {
+        // 포션 아이콘 (병)
+        ctx.fillRect(cx - s * 0.15, cy - s * 0.7, s * 0.3, s * 0.3);
+        ctx.beginPath();
+        ctx.moveTo(cx - s * 0.15, cy - s * 0.4);
+        ctx.lineTo(cx - s * 0.4, cy + s * 0.2);
+        ctx.lineTo(cx - s * 0.4, cy + s * 0.7);
+        ctx.lineTo(cx + s * 0.4, cy + s * 0.7);
+        ctx.lineTo(cx + s * 0.4, cy + s * 0.2);
+        ctx.lineTo(cx + s * 0.15, cy - s * 0.4);
+        ctx.closePath();
+        ctx.fill();
+    } else if (slotType === 'scroll') {
+        // 주문서 아이콘 (두루마리)
+        ctx.fillRect(cx - s * 0.4, cy - s * 0.5, s * 0.8, s);
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.fillRect(cx - s * 0.25, cy - s * 0.35, s * 0.5, s * 0.1);
+        ctx.fillRect(cx - s * 0.25, cy - s * 0.15, s * 0.5, s * 0.1);
+        ctx.fillRect(cx - s * 0.25, cy + s * 0.05, s * 0.5, s * 0.1);
+    } else if (slotType === 'food') {
+        // 음식 아이콘 (고기)
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, s * 0.6, s * 0.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(139,69,19,0.8)';
+        ctx.fillRect(cx - s * 0.1, cy + s * 0.3, s * 0.2, s * 0.4);
+    } else if (slotType === 'bomb') {
+        // 폭탄 아이콘
+        ctx.beginPath();
+        ctx.arc(cx, cy + s * 0.1, s * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - s * 0.4);
+        ctx.lineTo(cx + s * 0.2, cy - s * 0.7);
+        ctx.stroke();
+        ctx.fillStyle = '#FF4500';
+        ctx.beginPath();
+        ctx.arc(cx + s * 0.2, cy - s * 0.7, s * 0.15, 0, Math.PI * 2);
         ctx.fill();
     }
 

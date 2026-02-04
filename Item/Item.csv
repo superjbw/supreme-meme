@@ -1,0 +1,41 @@
+﻿id,type,name,rarity,description,effect,value,stackMax,dropWeight,color
+400001,potion,소형 체력 포션,D,체력을 소량 회복한다,healHp,30,99,100,#FF6B6B
+400002,potion,중형 체력 포션,C,체력을 회복한다,healHp,80,99,100,#FF4444
+400003,potion,대형 체력 포션,B,체력을 대량 회복한다,healHp,200,99,100,#FF0000
+400004,potion,고급 체력 포션,A,체력을 크게 회복한다,healHp,500,99,100,#DC143C
+400005,potion,특급 체력 포션,S,체력을 매우 크게 회복한다,healHp,1000,50,100,#FF1493
+400006,potion,전설의 포션,SS,체력을 대폭 회복한다,healHp,2000,30,100,#FFD700
+400007,potion,드래곤 포션,SR,드래곤의 힘이 담긴 포션,healHp,5000,20,100,#FF4466
+400008,potion,엘릭서,SU,체력을 완전히 회복한다,healHpFull,100,10,100,#FFD700
+400101,potion,민첩의 물약,D,일시적으로 이동속도 소폭 증가,buffSpeed,1.1,50,100,#87CEEB
+400102,potion,민첩의 물약 II,C,일시적으로 이동속도 증가,buffSpeed,1.2,50,100,#00BFFF
+400103,potion,민첩의 물약 III,B,일시적으로 이동속도 크게 증가,buffSpeed,1.3,50,100,#00CED1
+400104,potion,민첩의 물약 IV,A,일시적으로 이동속도 대폭 증가,buffSpeed,1.5,30,100,#00FFFF
+400105,potion,질풍의 물약,S,바람처럼 빠르게 이동,buffSpeed,1.8,20,100,#00FF7F
+400106,potion,섬광의 물약,SS,번개처럼 빠르게 이동,buffSpeed,2.0,10,100,#FFFF00
+400107,potion,순간이동 물약,SR,순간적으로 엄청난 속도,buffSpeed,2.5,5,100,#FF4466
+400108,potion,시간의 물약,SU,시간을 초월한 속도,buffSpeed,3.0,3,100,#FFD700
+400201,scroll,귀환 주문서,D,마을로 귀환한다,teleportTown,0,50,100,#F5F5DC
+400202,scroll,순간이동 주문서,C,지정 위치로 이동,teleport,0,50,100,#87CEEB
+400203,scroll,식별 주문서,B,미확인 아이템을 식별한다,identify,0,99,100,#DEB887
+400204,scroll,축복 주문서,A,장비에 축복을 부여한다,bless,0,30,100,#FFD700
+400205,scroll,강화 주문서,S,장비를 강화한다,enhance,1,20,100,#9370DB
+400206,scroll,고급 강화 주문서,SS,장비를 안전하게 강화한다,enhanceSafe,1,10,100,#FFD700
+400207,scroll,부활 주문서,SR,사망시 즉시 부활한다,revive,100,5,100,#FF4466
+400208,scroll,기적의 주문서,SU,모든 효과를 부여한다,miracle,0,3,100,#FFD700
+400301,food,빵,D,허기를 채워준다,healHp,15,99,100,#DEB887
+400302,food,고기구이,C,맛있는 고기 요리,healHp,50,50,100,#CD853F
+400303,food,스테이크,B,풍미 가득한 스테이크,healHp,120,50,100,#8B4513
+400304,food,고급 정찬,A,귀족의 식사,healHp,300,30,100,#FFD700
+400305,food,용의 고기,S,드래곤 고기 요리,healHp,600,20,100,#FF4466
+400306,food,신들의 음식,SS,신성한 요리,healHp,1200,10,100,#FFD700
+400307,food,불멸의 과일,SR,불멸의 나무 열매,healHp,2500,5,100,#FF4466
+400308,food,왕의 만찬,SU,최고급 요리,healHpFull,100,3,100,#FFD700
+400401,bomb,수류탄,D,범위 피해를 준다,areaDamage,30,30,100,#808080
+400402,bomb,화염병,C,화염 범위 피해,areaDamage,60,30,100,#FF4500
+400403,bomb,얼음 폭탄,B,적을 동결시킨다,freeze,3,20,100,#00BFFF
+400404,bomb,번개 폭탄,A,번개 범위 피해,areaDamage,150,20,100,#FFFF00
+400405,bomb,독 폭탄,S,독 범위 피해,poison,5,15,100,#32CD32
+400406,bomb,용암 폭탄,SS,용암 범위 피해,areaDamage,400,10,100,#FF4500
+400407,bomb,드래곤 브레스,SR,드래곤의 숨결,areaDamage,800,5,100,#FF4466
+400408,bomb,심판의 폭탄,SU,신의 심판,areaDamage,2000,3,100,#FFD700

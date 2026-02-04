@@ -1,0 +1,9 @@
+﻿id,type,name,description,maxAmount,color,icon
+500001,gold,골드,기본 재화,9007199254740991,#FFD700,coin
+500002,gem,크리스탈,프리미엄 재화,999999,#00BFFF,crystal
+500003,token,명예 포인트,전투로 얻는 포인트,9999999,#FF6347,medal
+500004,token,길드 포인트,길드 활동 보상,9999999,#9370DB,guild
+500005,dust,강화석,장비 강화 재료,999999,#C0C0C0,stone
+500006,dust,축복의 가루,축복 부여 재료,99999,#FFD700,sparkle
+500007,ticket,던전 입장권,던전 입장에 필요,999,#FF69B4,ticket
+500008,ticket,보스 소환권,보스 소환에 필요,99,#FF4466,summon
