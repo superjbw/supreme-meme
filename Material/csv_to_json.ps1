@@ -35,7 +35,7 @@ try {
 
     $varName = "MATERIAL_DEFINITIONS"
     $jsonContent = $convertedData | ConvertTo-Json -Depth 10
-    $jsContent = "// Material 데이터 (자동 생성됨)`nconst $varName = $jsonContent;`n"
+    $jsContent = "// Material Data (Auto Generated)`nconst $varName = $jsonContent;`n"
 
     [System.IO.File]::WriteAllText($jsPath, $jsContent, [System.Text.UTF8Encoding]::new($false))
 

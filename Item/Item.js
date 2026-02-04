@@ -1,4 +1,4 @@
-// Item ?곗씠??(?먮룞 ?앹꽦??
+// Item Data (Auto Generated)
 const ITEM_DEFINITIONS = {
     "400001":  {
                    "id":  400001,

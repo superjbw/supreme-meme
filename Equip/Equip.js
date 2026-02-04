@@ -1,4 +1,4 @@
-// Equip ?곗씠??(?먮룞 ?앹꽦??
+// Equip Data (Auto Generated)
 const EQUIPMENT_DEFINITIONS = {
     "200001":  {
                    "id":  200001,

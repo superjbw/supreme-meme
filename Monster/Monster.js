@@ -1,4 +1,4 @@
-﻿// Monster ?곗씠??(?먮룞 ?앹꽦??
+﻿// Monster Data (Auto Generated)
 const MONSTER_DATA = [
     {
         "id":  100001,

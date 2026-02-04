@@ -1,4 +1,4 @@
-// Currency ?곗씠??(?먮룞 ?앹꽦??
+// Currency Data (Auto Generated)
 const CURRENCY_DEFINITIONS = {
     "500001":  {
                    "id":  500001,

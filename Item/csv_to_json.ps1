@@ -37,7 +37,7 @@ try {
 
     $varName = "ITEM_DEFINITIONS"
     $jsonContent = $convertedData | ConvertTo-Json -Depth 10
-    $jsContent = "// Item 데이터 (자동 생성됨)`nconst $varName = $jsonContent;`n"
+    $jsContent = "// Item Data (Auto Generated)`nconst $varName = $jsonContent;`n"
 
     [System.IO.File]::WriteAllText($jsPath, $jsContent, [System.Text.UTF8Encoding]::new($false))
 

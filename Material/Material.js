@@ -1,4 +1,4 @@
-// Material ?곗씠??(?먮룞 ?앹꽦??
+// Material Data (Auto Generated)
 const MATERIAL_DEFINITIONS = {
     "300001":  {
                    "id":  300001,
