@@ -2880,9 +2880,8 @@ class EquipmentItem {
         ctx.arc(this.x + 14, drawY + 14, 14, 0, Math.PI * 2);
         ctx.fill();
 
-        // 장비 아이콘
-        ctx.fillStyle = this.definition.color;
-        this.drawIcon(ctx, this.x + 4, drawY + 4, slotType);
+        // 아이콘 (장비, 재료, 아이템 모두 지원)
+        drawEquipmentIcon(ctx, this.x, drawY, 28, slotType, this.definition.color);
 
         // 희귀도 테두리
         ctx.strokeStyle = rarityColor;
