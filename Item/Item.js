@@ -10,7 +10,8 @@ const ITEM_DEFINITIONS = {
                    "value":  30,
                    "stackMax":  99,
                    "dropWeight":  100,
-                   "color":  "#FF6B6B"
+                   "color":  "#FF6B6B",
+                   "returnGoldValue":  5
                },
     "400002":  {
                    "id":  400002,
@@ -22,7 +23,8 @@ const ITEM_DEFINITIONS = {
                    "value":  80,
                    "stackMax":  99,
                    "dropWeight":  100,
-                   "color":  "#FF4444"
+                   "color":  "#FF4444",
+                   "returnGoldValue":  15
                },
     "400003":  {
                    "id":  400003,
@@ -34,7 +36,8 @@ const ITEM_DEFINITIONS = {
                    "value":  200,
                    "stackMax":  99,
                    "dropWeight":  100,
-                   "color":  "#FF0000"
+                   "color":  "#FF0000",
+                   "returnGoldValue":  50
                },
     "400004":  {
                    "id":  400004,
@@ -46,7 +49,8 @@ const ITEM_DEFINITIONS = {
                    "value":  500,
                    "stackMax":  99,
                    "dropWeight":  100,
-                   "color":  "#DC143C"
+                   "color":  "#DC143C",
+                   "returnGoldValue":  150
                },
     "400005":  {
                    "id":  400005,
@@ -58,7 +62,8 @@ const ITEM_DEFINITIONS = {
                    "value":  1000,
                    "stackMax":  50,
                    "dropWeight":  100,
-                   "color":  "#FF1493"
+                   "color":  "#FF1493",
+                   "returnGoldValue":  500
                },
     "400006":  {
                    "id":  400006,
@@ -70,7 +75,8 @@ const ITEM_DEFINITIONS = {
                    "value":  2000,
                    "stackMax":  30,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  1500
                },
     "400007":  {
                    "id":  400007,
@@ -82,7 +88,8 @@ const ITEM_DEFINITIONS = {
                    "value":  5000,
                    "stackMax":  20,
                    "dropWeight":  100,
-                   "color":  "#FF4466"
+                   "color":  "#FF4466",
+                   "returnGoldValue":  5000
                },
     "400008":  {
                    "id":  400008,
@@ -94,7 +101,8 @@ const ITEM_DEFINITIONS = {
                    "value":  100,
                    "stackMax":  10,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  15000
                },
     "400101":  {
                    "id":  400101,
@@ -106,7 +114,8 @@ const ITEM_DEFINITIONS = {
                    "value":  1.1,
                    "stackMax":  50,
                    "dropWeight":  100,
-                   "color":  "#87CEEB"
+                   "color":  "#87CEEB",
+                   "returnGoldValue":  5
                },
     "400102":  {
                    "id":  400102,
@@ -118,7 +127,8 @@ const ITEM_DEFINITIONS = {
                    "value":  1.2,
                    "stackMax":  50,
                    "dropWeight":  100,
-                   "color":  "#00BFFF"
+                   "color":  "#00BFFF",
+                   "returnGoldValue":  15
                },
     "400103":  {
                    "id":  400103,
@@ -130,7 +140,8 @@ const ITEM_DEFINITIONS = {
                    "value":  1.3,
                    "stackMax":  50,
                    "dropWeight":  100,
-                   "color":  "#00CED1"
+                   "color":  "#00CED1",
+                   "returnGoldValue":  50
                },
     "400104":  {
                    "id":  400104,
@@ -142,7 +153,8 @@ const ITEM_DEFINITIONS = {
                    "value":  1.5,
                    "stackMax":  30,
                    "dropWeight":  100,
-                   "color":  "#00FFFF"
+                   "color":  "#00FFFF",
+                   "returnGoldValue":  150
                },
     "400105":  {
                    "id":  400105,
@@ -154,7 +166,8 @@ const ITEM_DEFINITIONS = {
                    "value":  1.8,
                    "stackMax":  20,
                    "dropWeight":  100,
-                   "color":  "#00FF7F"
+                   "color":  "#00FF7F",
+                   "returnGoldValue":  500
                },
     "400106":  {
                    "id":  400106,
@@ -166,7 +179,8 @@ const ITEM_DEFINITIONS = {
                    "value":  2,
                    "stackMax":  10,
                    "dropWeight":  100,
-                   "color":  "#FFFF00"
+                   "color":  "#FFFF00",
+                   "returnGoldValue":  1500
                },
     "400107":  {
                    "id":  400107,
@@ -178,7 +192,8 @@ const ITEM_DEFINITIONS = {
                    "value":  2.5,
                    "stackMax":  5,
                    "dropWeight":  100,
-                   "color":  "#FF4466"
+                   "color":  "#FF4466",
+                   "returnGoldValue":  5000
                },
     "400108":  {
                    "id":  400108,
@@ -190,7 +205,8 @@ const ITEM_DEFINITIONS = {
                    "value":  3,
                    "stackMax":  3,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  15000
                },
     "400201":  {
                    "id":  400201,
@@ -202,7 +218,8 @@ const ITEM_DEFINITIONS = {
                    "value":  0,
                    "stackMax":  50,
                    "dropWeight":  100,
-                   "color":  "#F5F5DC"
+                   "color":  "#F5F5DC",
+                   "returnGoldValue":  5
                },
     "400202":  {
                    "id":  400202,
@@ -214,7 +231,8 @@ const ITEM_DEFINITIONS = {
                    "value":  0,
                    "stackMax":  50,
                    "dropWeight":  100,
-                   "color":  "#87CEEB"
+                   "color":  "#87CEEB",
+                   "returnGoldValue":  15
                },
     "400203":  {
                    "id":  400203,
@@ -226,7 +244,8 @@ const ITEM_DEFINITIONS = {
                    "value":  0,
                    "stackMax":  99,
                    "dropWeight":  100,
-                   "color":  "#DEB887"
+                   "color":  "#DEB887",
+                   "returnGoldValue":  50
                },
     "400204":  {
                    "id":  400204,
@@ -238,7 +257,8 @@ const ITEM_DEFINITIONS = {
                    "value":  0,
                    "stackMax":  30,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  150
                },
     "400205":  {
                    "id":  400205,
@@ -250,7 +270,8 @@ const ITEM_DEFINITIONS = {
                    "value":  1,
                    "stackMax":  20,
                    "dropWeight":  100,
-                   "color":  "#9370DB"
+                   "color":  "#9370DB",
+                   "returnGoldValue":  500
                },
     "400206":  {
                    "id":  400206,
@@ -262,7 +283,8 @@ const ITEM_DEFINITIONS = {
                    "value":  1,
                    "stackMax":  10,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  1500
                },
     "400207":  {
                    "id":  400207,
@@ -274,7 +296,8 @@ const ITEM_DEFINITIONS = {
                    "value":  100,
                    "stackMax":  5,
                    "dropWeight":  100,
-                   "color":  "#FF4466"
+                   "color":  "#FF4466",
+                   "returnGoldValue":  5000
                },
     "400208":  {
                    "id":  400208,
@@ -286,7 +309,8 @@ const ITEM_DEFINITIONS = {
                    "value":  0,
                    "stackMax":  3,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  15000
                },
     "400301":  {
                    "id":  400301,
@@ -298,7 +322,8 @@ const ITEM_DEFINITIONS = {
                    "value":  15,
                    "stackMax":  99,
                    "dropWeight":  100,
-                   "color":  "#DEB887"
+                   "color":  "#DEB887",
+                   "returnGoldValue":  3
                },
     "400302":  {
                    "id":  400302,
@@ -310,7 +335,8 @@ const ITEM_DEFINITIONS = {
                    "value":  50,
                    "stackMax":  50,
                    "dropWeight":  100,
-                   "color":  "#CD853F"
+                   "color":  "#CD853F",
+                   "returnGoldValue":  10
                },
     "400303":  {
                    "id":  400303,
@@ -322,7 +348,8 @@ const ITEM_DEFINITIONS = {
                    "value":  120,
                    "stackMax":  50,
                    "dropWeight":  100,
-                   "color":  "#8B4513"
+                   "color":  "#8B4513",
+                   "returnGoldValue":  35
                },
     "400304":  {
                    "id":  400304,
@@ -334,7 +361,8 @@ const ITEM_DEFINITIONS = {
                    "value":  300,
                    "stackMax":  30,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  100
                },
     "400305":  {
                    "id":  400305,
@@ -346,7 +374,8 @@ const ITEM_DEFINITIONS = {
                    "value":  600,
                    "stackMax":  20,
                    "dropWeight":  100,
-                   "color":  "#FF4466"
+                   "color":  "#FF4466",
+                   "returnGoldValue":  350
                },
     "400306":  {
                    "id":  400306,
@@ -358,7 +387,8 @@ const ITEM_DEFINITIONS = {
                    "value":  1200,
                    "stackMax":  10,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  1000
                },
     "400307":  {
                    "id":  400307,
@@ -370,7 +400,8 @@ const ITEM_DEFINITIONS = {
                    "value":  2500,
                    "stackMax":  5,
                    "dropWeight":  100,
-                   "color":  "#FF4466"
+                   "color":  "#FF4466",
+                   "returnGoldValue":  3500
                },
     "400308":  {
                    "id":  400308,
@@ -382,7 +413,8 @@ const ITEM_DEFINITIONS = {
                    "value":  100,
                    "stackMax":  3,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  10000
                },
     "400401":  {
                    "id":  400401,
@@ -394,7 +426,8 @@ const ITEM_DEFINITIONS = {
                    "value":  30,
                    "stackMax":  30,
                    "dropWeight":  100,
-                   "color":  "#808080"
+                   "color":  "#808080",
+                   "returnGoldValue":  8
                },
     "400402":  {
                    "id":  400402,
@@ -406,7 +439,8 @@ const ITEM_DEFINITIONS = {
                    "value":  60,
                    "stackMax":  30,
                    "dropWeight":  100,
-                   "color":  "#FF4500"
+                   "color":  "#FF4500",
+                   "returnGoldValue":  25
                },
     "400403":  {
                    "id":  400403,
@@ -418,7 +452,8 @@ const ITEM_DEFINITIONS = {
                    "value":  3,
                    "stackMax":  20,
                    "dropWeight":  100,
-                   "color":  "#00BFFF"
+                   "color":  "#00BFFF",
+                   "returnGoldValue":  80
                },
     "400404":  {
                    "id":  400404,
@@ -430,7 +465,8 @@ const ITEM_DEFINITIONS = {
                    "value":  150,
                    "stackMax":  20,
                    "dropWeight":  100,
-                   "color":  "#FFFF00"
+                   "color":  "#FFFF00",
+                   "returnGoldValue":  250
                },
     "400405":  {
                    "id":  400405,
@@ -442,7 +478,8 @@ const ITEM_DEFINITIONS = {
                    "value":  5,
                    "stackMax":  15,
                    "dropWeight":  100,
-                   "color":  "#32CD32"
+                   "color":  "#32CD32",
+                   "returnGoldValue":  800
                },
     "400406":  {
                    "id":  400406,
@@ -454,7 +491,8 @@ const ITEM_DEFINITIONS = {
                    "value":  400,
                    "stackMax":  10,
                    "dropWeight":  100,
-                   "color":  "#FF4500"
+                   "color":  "#FF4500",
+                   "returnGoldValue":  2500
                },
     "400407":  {
                    "id":  400407,
@@ -466,7 +504,8 @@ const ITEM_DEFINITIONS = {
                    "value":  800,
                    "stackMax":  5,
                    "dropWeight":  100,
-                   "color":  "#FF4466"
+                   "color":  "#FF4466",
+                   "returnGoldValue":  8000
                },
     "400408":  {
                    "id":  400408,
@@ -478,6 +517,7 @@ const ITEM_DEFINITIONS = {
                    "value":  2000,
                    "stackMax":  3,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  25000
                }
 };

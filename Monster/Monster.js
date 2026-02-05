@@ -1,9 +1,9 @@
-﻿// Monster Data (Auto Generated)
+﻿// Monster ?곗씠??(?먮룞 ?앹꽦??
 const MONSTER_DATA = [
     {
         "id":  100001,
         "expGain":  20,
-        "coinValue":  10,
+        "goldPerCoin":  10,
         "hp":  50,
         "itemDropChance":  0.3,
         "name":  "슬라임",
@@ -23,7 +23,7 @@ const MONSTER_DATA = [
     {
         "id":  100002,
         "expGain":  35,
-        "coinValue":  15,
+        "goldPerCoin":  15,
         "hp":  80,
         "itemDropChance":  0.3,
         "name":  "버섯",
@@ -43,7 +43,7 @@ const MONSTER_DATA = [
     {
         "id":  100003,
         "expGain":  45,
-        "coinValue":  20,
+        "goldPerCoin":  20,
         "hp":  60,
         "itemDropChance":  0.3,
         "name":  "유령",
@@ -63,7 +63,7 @@ const MONSTER_DATA = [
     {
         "id":  100004,
         "expGain":  225,
-        "coinValue":  100,
+        "goldPerCoin":  100,
         "hp":  3000,
         "itemDropChance":  0.3,
         "name":  "대왕 유령",
@@ -83,7 +83,7 @@ const MONSTER_DATA = [
     {
         "id":  100005,
         "expGain":  45,
-        "coinValue":  20,
+        "goldPerCoin":  20,
         "hp":  60,
         "itemDropChance":  0.3,
         "name":  "노예 유령",

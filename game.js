@@ -50,23 +50,59 @@ const camera = {
 // 데미지 텍스트 배열
 const damageTexts = [];
 
+// UI 알림 배열 (화면 고정)
+const uiNotifications = [];
+
+// UI 알림 클래스
+class UINotification {
+    constructor(x, y, text, color = '#FFD700', life = 120) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        this.life = life;
+        this.maxLife = life;
+        this.alpha = 1;
+    }
+
+    update() {
+        this.life--;
+        this.alpha = Math.min(1, this.life / 30); // 마지막 30프레임에서 페이드아웃
+        return this.life > 0;
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'center';
+        ctx.strokeText(this.text, this.x, this.y);
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.restore();
+    }
+}
+
 // 데미지 텍스트 클래스
 class DamageText {
-    constructor(x, y, damage, color = '#ff0') {
+    constructor(x, y, damage, color = '#ff0', life = 60) {
         this.x = x;
         this.y = y;
         this.damage = damage;
         this.color = color;
         this.alpha = 1;
         this.velY = -3;
-        this.life = 60;
+        this.life = life;
+        this.maxLife = life;
     }
 
     update() {
         this.y += this.velY;
         this.velY += 0.05;
         this.life--;
-        this.alpha = this.life / 60;
+        this.alpha = this.life / this.maxLife;
         return this.life > 0;
     }
 
@@ -195,7 +231,7 @@ class Player {
         this.flashTimer = 0;
 
         // 코인
-        this.coins = 0;
+        this.gold = 0;
 
         // 레벨/경험치
         this.level = 1;
@@ -277,6 +313,24 @@ class Player {
         this.equipment[slot] = null;
         this.recalculateEquipmentStats();
         return true;
+    }
+
+    // 아이템 판매
+    sellItem(itemId, slot) {
+        const found = findDefinition(itemId);
+        if (!found) return { success: false, gold: 0 };
+
+        const def = found.def;
+        const goldValue = def.returnGoldValue || 0;
+
+        // 인벤토리에서 아이템 찾기 및 제거
+        const invIndex = this.inventory[slot].indexOf(itemId);
+        if (invIndex === -1) return { success: false, gold: 0 };
+
+        this.inventory[slot].splice(invIndex, 1);
+        this.gold += goldValue;
+
+        return { success: true, gold: goldValue };
     }
 
     // 장비 스탯 재계산
@@ -1087,7 +1141,7 @@ class Monster {
             this.damage = data.damage || 10;
             this.speed = data.speed || 1.5;
             this.coinCount = data.coinCount || 2;
-            this.coinValue = data.coinValue || 10;
+            this.goldPerCoin = data.goldPerCoin || 10;
             this.expGain = data.expGain || 20;
             this.equipDropChance = data.equipDropChance || 0.08;
             this.equipMaxRarity = data.equipMaxRarity || 'C';
@@ -1107,7 +1161,7 @@ class Monster {
             this.damage = 10;
             this.speed = 1.5;
             this.coinCount = 2;
-            this.coinValue = 10;
+            this.goldPerCoin = 10;
             this.expGain = 20;
             this.equipDropChance = 0.08;
             this.equipMaxRarity = 'C';
@@ -1376,7 +1430,7 @@ class Monster {
                 coins.push(new Coin(
                     this.x + this.width / 2 - 10,
                     this.y + this.height / 2,
-                    this.coinValue
+                    this.goldPerCoin
                 ));
             }
 
@@ -2007,13 +2061,13 @@ class Coin {
         ctx.arc(0, 0, 7, 0, Math.PI * 2);
         ctx.fill();
 
-        // $ 표시
+        // G 표시
         if (Math.abs(scaleX) > 0.3) {
             ctx.fillStyle = '#daa520';
             ctx.font = 'bold 12px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('$', 0, 0);
+            ctx.fillText('G', 0, 0);
         }
 
         ctx.restore();
@@ -3694,9 +3748,13 @@ function handleEquipmentPanelClick(mouseX, mouseY) {
             return;
         }
 
-        // 장착/해제 버튼
+        // 장착/해제 버튼 (장비만)
         const btnY = detailY + detailH - 40;
-        if (mouseX >= detailX + 20 && mouseX <= detailX + 100 &&
+        const found = findDefinition(viewingEquipmentId);
+        const category = found ? found.category : null;
+
+        if (category === 'equipment' &&
+            mouseX >= detailX + 20 && mouseX <= detailX + 100 &&
             mouseY >= btnY && mouseY <= btnY + 30) {
             if (viewingEquipmentSlot) {
                 // 장착 슬롯에서 봤으면 해제
@@ -3708,6 +3766,37 @@ function handleEquipmentPanelClick(mouseX, mouseY) {
             viewingEquipmentId = null;
             viewingEquipmentSlot = null;
             return;
+        }
+
+        // 판매 버튼 (장착중이 아닌 경우에만)
+        if (!viewingEquipmentSlot && found) {
+            const sellBtnX = category === 'equipment' ? detailX + 110 : detailX + 20;
+            if (mouseX >= sellBtnX && mouseX <= sellBtnX + 90 &&
+                mouseY >= btnY && mouseY <= btnY + 30) {
+                // 인벤토리 슬롯 결정
+                let slot;
+                if (category === 'equipment') {
+                    slot = found.def.type;
+                } else if (category === 'material') {
+                    slot = 'material';
+                } else if (category === 'item') {
+                    slot = 'item';
+                }
+
+                const result = player.sellItem(viewingEquipmentId, slot);
+                if (result.success) {
+                    uiNotifications.push(new UINotification(
+                        canvas.width / 2,
+                        canvas.height / 2 - 20,
+                        `판매 완료! +${result.gold}G`,
+                        '#FFD700',
+                        45
+                    ));
+                }
+                viewingEquipmentId = null;
+                viewingEquipmentSlot = null;
+                return;
+            }
         }
 
         // 상세창 외부 클릭 - 닫기
@@ -3882,7 +3971,8 @@ function drawBackground() {
     const bg = stage && stage.background ? stage.background : {
         skyTop: '#87CEEB',
         skyBottom: '#E0F6FF',
-        mountains: []
+        mountains: [],
+        houses: []
     };
 
     // 하늘 (고정)
@@ -3911,6 +4001,39 @@ function drawBackground() {
             ctx.lineTo((mt.x1 + mt.x2) / 2 - parallaxX, canvas.height - 50 - mt.peak);
             ctx.lineTo(mt.x2 - parallaxX, canvas.height - 50);
             ctx.fill();
+        }
+    }
+
+    // 집 그리기 (산과 같은 속도로 움직임)
+    if (bg.houses) {
+        const floorY = canvas.height - 50;
+        for (let house of bg.houses) {
+            const parallaxX = camera.x * 0.5;
+            const hx = house.x - parallaxX;
+
+            // 집 몸체
+            ctx.fillStyle = house.wallColor || '#D2691E';
+            ctx.fillRect(hx, floorY - house.height, house.width, house.height);
+
+            // 지붕
+            ctx.fillStyle = house.roofColor || '#8B0000';
+            ctx.beginPath();
+            ctx.moveTo(hx - 10, floorY - house.height);
+            ctx.lineTo(hx + house.width / 2, floorY - house.height - house.roofHeight);
+            ctx.lineTo(hx + house.width + 10, floorY - house.height);
+            ctx.fill();
+
+            // 문
+            ctx.fillStyle = '#4A2810';
+            const doorW = house.width * 0.25;
+            const doorH = house.height * 0.5;
+            ctx.fillRect(hx + house.width / 2 - doorW / 2, floorY - doorH, doorW, doorH);
+
+            // 창문
+            ctx.fillStyle = '#87CEEB';
+            const winSize = house.width * 0.2;
+            ctx.fillRect(hx + house.width * 0.15, floorY - house.height * 0.75, winSize, winSize);
+            ctx.fillRect(hx + house.width * 0.65, floorY - house.height * 0.75, winSize, winSize);
         }
     }
 }
@@ -3962,13 +4085,13 @@ function drawUI() {
     ctx.fillStyle = '#daa520';
     ctx.font = 'bold 10px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('$', canvas.width - 145, 61);
+    ctx.fillText('G', canvas.width - 145, 61);
 
     // 코인 수
     ctx.fillStyle = '#ffd700';
     ctx.font = 'bold 14px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`${player.coins}`, canvas.width - 130, 62);
+    ctx.fillText(`${player.gold}`, canvas.width - 130, 62);
 
     // HP/EXP 바 배경
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -4679,9 +4802,11 @@ function drawEquipmentDetail() {
         ctx.fillText(`최대 보유: ${def.stackMax}`, detailX + 20, statY);
     }
 
+    // 버튼 영역
+    const btnY = detailY + detailH - 40;
+
     // 장착/해제 버튼 (장비만)
     if (category === 'equipment') {
-        const btnY = detailY + detailH - 40;
         const btnText = viewingEquipmentSlot ? '해제' : '장착';
         const btnColor = viewingEquipmentSlot ? '#FF6666' : '#66AA66';
 
@@ -4695,6 +4820,23 @@ function drawEquipmentDetail() {
         ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(btnText, detailX + 60, btnY + 20);
+    }
+
+    // 판매 버튼 (장착중이 아닌 경우에만)
+    if (!viewingEquipmentSlot) {
+        const sellBtnX = category === 'equipment' ? detailX + 110 : detailX + 20;
+        const sellValue = def.returnGoldValue || 0;
+
+        ctx.fillStyle = '#DAA520';
+        ctx.fillRect(sellBtnX, btnY, 90, 30);
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(sellBtnX, btnY, 90, 30);
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`판매 ${sellValue}G`, sellBtnX + 45, btnY + 20);
     }
 
     ctx.textAlign = 'left';
@@ -5011,7 +5153,7 @@ function gameLoop() {
         if (c.collidesWith(player)) {
             const value = c.collect();
             if (value > 0) {
-                player.coins += value;
+                player.gold += value;
                 damageTexts.push(new DamageText(
                     player.x + player.width / 2,
                     player.y - 10,
@@ -5118,6 +5260,15 @@ function gameLoop() {
 
     // UI 그리기 (화면 고정)
     drawUI();
+
+    // UI 알림 업데이트 및 그리기
+    for (let i = uiNotifications.length - 1; i >= 0; i--) {
+        if (!uiNotifications[i].update()) {
+            uiNotifications.splice(i, 1);
+        } else {
+            uiNotifications[i].draw(ctx);
+        }
+    }
 
     requestAnimationFrame(gameLoop);
 }

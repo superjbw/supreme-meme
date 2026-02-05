@@ -28,6 +28,7 @@ try {
             stackMax = [int]$row.stackMax
             dropWeight = [int]$row.dropWeight
             color = $row.color
+            returnGoldValue = [int]$row.returnGoldValue
         }
 
         $convertedData[$idStr] = $newRow

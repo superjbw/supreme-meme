@@ -30,6 +30,7 @@ foreach ($csvFile in $csvFiles) {
                 rarity = $row.rarity
                 color = $row.color
                 dropWeight = [double]$row.dropWeight
+                returnGoldValue = [int]$row.returnGoldValue
                 stats = [ordered]@{}
             }
 

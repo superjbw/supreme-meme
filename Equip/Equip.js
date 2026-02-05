@@ -1,4 +1,4 @@
-// Equip Data (Auto Generated)
+// Equip ?곗씠??(?먮룞 ?앹꽦??
 const EQUIPMENT_DEFINITIONS = {
     "200001":  {
                    "id":  200001,
@@ -7,6 +7,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "D",
                    "color":  "#8B7355",
                    "dropWeight":  100,
+                   "returnGoldValue":  10,
                    "stats":  {
                                  "defense":  1,
                                  "maxHp":  5
@@ -19,6 +20,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "C",
                    "color":  "#8B4513",
                    "dropWeight":  100,
+                   "returnGoldValue":  30,
                    "stats":  {
                                  "defense":  3,
                                  "maxHp":  10
@@ -31,6 +33,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "B",
                    "color":  "#708090",
                    "dropWeight":  100,
+                   "returnGoldValue":  100,
                    "stats":  {
                                  "defense":  6,
                                  "maxHp":  20
@@ -43,6 +46,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "A",
                    "color":  "#4682B4",
                    "dropWeight":  100,
+                   "returnGoldValue":  300,
                    "stats":  {
                                  "defense":  10,
                                  "maxHp":  35
@@ -55,6 +59,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "S",
                    "color":  "#9370DB",
                    "dropWeight":  100,
+                   "returnGoldValue":  1000,
                    "stats":  {
                                  "defense":  15,
                                  "maxHp":  50
@@ -67,6 +72,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SS",
                    "color":  "#FFD700",
                    "dropWeight":  100,
+                   "returnGoldValue":  3000,
                    "stats":  {
                                  "defense":  22,
                                  "maxHp":  70
@@ -79,6 +85,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SR",
                    "color":  "#FF4466",
                    "dropWeight":  100,
+                   "returnGoldValue":  10000,
                    "stats":  {
                                  "defense":  30,
                                  "maxHp":  100
@@ -91,6 +98,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SU",
                    "color":  "#FFD700",
                    "dropWeight":  100,
+                   "returnGoldValue":  30000,
                    "stats":  {
                                  "defense":  40,
                                  "maxHp":  150
@@ -103,6 +111,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "D",
                    "color":  "#8B7355",
                    "dropWeight":  100,
+                   "returnGoldValue":  10,
                    "stats":  {
                                  "defense":  2,
                                  "maxHp":  8
@@ -115,6 +124,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "C",
                    "color":  "#8B4513",
                    "dropWeight":  100,
+                   "returnGoldValue":  30,
                    "stats":  {
                                  "defense":  5,
                                  "maxHp":  15
@@ -127,6 +137,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "B",
                    "color":  "#708090",
                    "dropWeight":  100,
+                   "returnGoldValue":  100,
                    "stats":  {
                                  "defense":  10,
                                  "maxHp":  30
@@ -139,6 +150,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "A",
                    "color":  "#4682B4",
                    "dropWeight":  100,
+                   "returnGoldValue":  300,
                    "stats":  {
                                  "defense":  16,
                                  "maxHp":  50
@@ -151,6 +163,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "S",
                    "color":  "#9370DB",
                    "dropWeight":  100,
+                   "returnGoldValue":  1000,
                    "stats":  {
                                  "defense":  24,
                                  "maxHp":  75
@@ -163,6 +176,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SS",
                    "color":  "#FFD700",
                    "dropWeight":  100,
+                   "returnGoldValue":  3000,
                    "stats":  {
                                  "defense":  35,
                                  "maxHp":  100
@@ -175,6 +189,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SR",
                    "color":  "#FF4466",
                    "dropWeight":  100,
+                   "returnGoldValue":  10000,
                    "stats":  {
                                  "defense":  50,
                                  "maxHp":  150
@@ -187,6 +202,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SU",
                    "color":  "#FFD700",
                    "dropWeight":  100,
+                   "returnGoldValue":  30000,
                    "stats":  {
                                  "defense":  70,
                                  "maxHp":  200
@@ -199,6 +215,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "D",
                    "color":  "#8B7355",
                    "dropWeight":  100,
+                   "returnGoldValue":  10,
                    "stats":  {
                                  "attackDamage":  3
                              }
@@ -210,6 +227,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "C",
                    "color":  "#DEB887",
                    "dropWeight":  100,
+                   "returnGoldValue":  30,
                    "stats":  {
                                  "attackDamage":  6
                              }
@@ -221,6 +239,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "B",
                    "color":  "#708090",
                    "dropWeight":  100,
+                   "returnGoldValue":  100,
                    "stats":  {
                                  "attackDamage":  12
                              }
@@ -232,6 +251,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "A",
                    "color":  "#4682B4",
                    "dropWeight":  100,
+                   "returnGoldValue":  300,
                    "stats":  {
                                  "attackDamage":  20
                              }
@@ -243,6 +263,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "S",
                    "color":  "#9370DB",
                    "dropWeight":  100,
+                   "returnGoldValue":  1000,
                    "stats":  {
                                  "attackDamage":  30
                              }
@@ -254,6 +275,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SS",
                    "color":  "#FF4500",
                    "dropWeight":  100,
+                   "returnGoldValue":  3000,
                    "stats":  {
                                  "attackDamage":  45
                              }
@@ -265,6 +287,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SR",
                    "color":  "#FF4466",
                    "dropWeight":  100,
+                   "returnGoldValue":  10000,
                    "stats":  {
                                  "attackDamage":  65
                              }
@@ -276,6 +299,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SU",
                    "color":  "#FFD700",
                    "dropWeight":  100,
+                   "returnGoldValue":  30000,
                    "stats":  {
                                  "attackDamage":  100
                              }
@@ -287,6 +311,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "D",
                    "color":  "#8B7355",
                    "dropWeight":  100,
+                   "returnGoldValue":  10,
                    "stats":  {
                                  "speed":  0.2
                              }
@@ -298,6 +323,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "C",
                    "color":  "#8B4513",
                    "dropWeight":  100,
+                   "returnGoldValue":  30,
                    "stats":  {
                                  "defense":  1,
                                  "speed":  0.5
@@ -310,6 +336,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "B",
                    "color":  "#708090",
                    "dropWeight":  100,
+                   "returnGoldValue":  100,
                    "stats":  {
                                  "defense":  3,
                                  "speed":  0.8
@@ -322,6 +349,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "A",
                    "color":  "#00CED1",
                    "dropWeight":  100,
+                   "returnGoldValue":  300,
                    "stats":  {
                                  "defense":  5,
                                  "speed":  1.2
@@ -334,6 +362,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "S",
                    "color":  "#9370DB",
                    "dropWeight":  100,
+                   "returnGoldValue":  1000,
                    "stats":  {
                                  "defense":  8,
                                  "speed":  1.5,
@@ -347,6 +376,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SS",
                    "color":  "#00FFFF",
                    "dropWeight":  100,
+                   "returnGoldValue":  3000,
                    "stats":  {
                                  "defense":  12,
                                  "speed":  2,
@@ -360,6 +390,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SR",
                    "color":  "#FF4466",
                    "dropWeight":  100,
+                   "returnGoldValue":  10000,
                    "stats":  {
                                  "defense":  18,
                                  "speed":  2.5,
@@ -373,6 +404,7 @@ const EQUIPMENT_DEFINITIONS = {
                    "rarity":  "SU",
                    "color":  "#FFD700",
                    "dropWeight":  100,
+                   "returnGoldValue":  30000,
                    "stats":  {
                                  "defense":  25,
                                  "speed":  3,

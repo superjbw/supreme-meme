@@ -8,7 +8,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "가장 기본적인 광석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#B87333"
+                   "color":  "#B87333",
+                   "returnGoldValue":  2
                },
     "300002":  {
                    "id":  300002,
@@ -18,7 +19,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "단단한 철 광석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#708090"
+                   "color":  "#708090",
+                   "returnGoldValue":  6
                },
     "300003":  {
                    "id":  300003,
@@ -28,7 +30,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "은빛 광택의 광석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#C0C0C0"
+                   "color":  "#C0C0C0",
+                   "returnGoldValue":  20
                },
     "300004":  {
                    "id":  300004,
@@ -38,7 +41,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "귀중한 금 광석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  60
                },
     "300005":  {
                    "id":  300005,
@@ -48,7 +52,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "신비로운 광석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#9370DB"
+                   "color":  "#9370DB",
+                   "returnGoldValue":  200
                },
     "300006":  {
                    "id":  300006,
@@ -58,7 +63,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "전설의 금속",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#00CED1"
+                   "color":  "#00CED1",
+                   "returnGoldValue":  600
                },
     "300007":  {
                    "id":  300007,
@@ -68,7 +74,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "드래곤에게서 얻은 광석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FF4466"
+                   "color":  "#FF4466",
+                   "returnGoldValue":  2000
                },
     "300008":  {
                    "id":  300008,
@@ -78,7 +85,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "신이 내린 금속",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  6000
                },
     "300101":  {
                    "id":  300101,
@@ -88,7 +96,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "기본적인 치료용 약초",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#228B22"
+                   "color":  "#228B22",
+                   "returnGoldValue":  2
                },
     "300102":  {
                    "id":  300102,
@@ -98,7 +107,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "청량한 기운의 약초",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#00FF7F"
+                   "color":  "#00FF7F",
+                   "returnGoldValue":  6
                },
     "300103":  {
                    "id":  300103,
@@ -108,7 +118,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "활력을 주는 약초",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FF6347"
+                   "color":  "#FF6347",
+                   "returnGoldValue":  20
                },
     "300104":  {
                    "id":  300104,
@@ -118,7 +129,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "희귀한 황금빛 약초",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  60
                },
     "300105":  {
                    "id":  300105,
@@ -128,7 +140,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "마력이 깃든 꽃",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#9370DB"
+                   "color":  "#9370DB",
+                   "returnGoldValue":  200
                },
     "300106":  {
                    "id":  300106,
@@ -138,7 +151,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "세계수에서 떨어진 잎",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#00FF7F"
+                   "color":  "#00FF7F",
+                   "returnGoldValue":  600
                },
     "300107":  {
                    "id":  300107,
@@ -148,7 +162,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "드래곤의 숨결이 깃든 약초",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FF4466"
+                   "color":  "#FF4466",
+                   "returnGoldValue":  2000
                },
     "300108":  {
                    "id":  300108,
@@ -158,7 +173,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "신성한 기운의 약초",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  6000
                },
     "300201":  {
                    "id":  300201,
@@ -168,7 +184,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "품질이 낮은 가죽",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#8B4513"
+                   "color":  "#8B4513",
+                   "returnGoldValue":  2
                },
     "300202":  {
                    "id":  300202,
@@ -178,7 +195,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "튼튼한 가죽",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#A0522D"
+                   "color":  "#A0522D",
+                   "returnGoldValue":  6
                },
     "300203":  {
                    "id":  300203,
@@ -188,7 +206,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "부드럽고 질긴 가죽",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#D2691E"
+                   "color":  "#D2691E",
+                   "returnGoldValue":  20
                },
     "300204":  {
                    "id":  300204,
@@ -198,7 +217,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "마물에게서 얻은 가죽",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#800000"
+                   "color":  "#800000",
+                   "returnGoldValue":  60
                },
     "300205":  {
                    "id":  300205,
@@ -208,7 +228,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "드래곤 비늘 가죽",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FF4466"
+                   "color":  "#FF4466",
+                   "returnGoldValue":  200
                },
     "300206":  {
                    "id":  300206,
@@ -218,7 +239,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "고대 마수의 가죽",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#4B0082"
+                   "color":  "#4B0082",
+                   "returnGoldValue":  600
                },
     "300207":  {
                    "id":  300207,
@@ -228,7 +250,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "천룡의 비늘 가죽",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#00CED1"
+                   "color":  "#00CED1",
+                   "returnGoldValue":  2000
                },
     "300208":  {
                    "id":  300208,
@@ -238,7 +261,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "신수의 성스러운 가죽",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  6000
                },
     "300301":  {
                    "id":  300301,
@@ -248,7 +272,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "흔한 나뭇가지",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#8B7355"
+                   "color":  "#8B7355",
+                   "returnGoldValue":  2
                },
     "300302":  {
                    "id":  300302,
@@ -258,7 +283,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "가공된 목재",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#DEB887"
+                   "color":  "#DEB887",
+                   "returnGoldValue":  6
                },
     "300303":  {
                    "id":  300303,
@@ -268,7 +294,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "마력이 스민 나무",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#9370DB"
+                   "color":  "#9370DB",
+                   "returnGoldValue":  20
                },
     "300304":  {
                    "id":  300304,
@@ -278,7 +305,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "세계수의 가지",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#00FF7F"
+                   "color":  "#00FF7F",
+                   "returnGoldValue":  60
                },
     "300305":  {
                    "id":  300305,
@@ -288,7 +316,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "정령이 깃든 나무",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#7CFC00"
+                   "color":  "#7CFC00",
+                   "returnGoldValue":  200
                },
     "300306":  {
                    "id":  300306,
@@ -298,7 +327,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "신성한 나무",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  600
                },
     "300307":  {
                    "id":  300307,
@@ -308,7 +338,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "드래곤의 기운이 깃든 나무",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FF4466"
+                   "color":  "#FF4466",
+                   "returnGoldValue":  2000
                },
     "300308":  {
                    "id":  300308,
@@ -318,7 +349,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "생명력이 넘치는 신목",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  6000
                },
     "300401":  {
                    "id":  300401,
@@ -328,7 +360,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "깨진 보석 조각",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#ADD8E6"
+                   "color":  "#ADD8E6",
+                   "returnGoldValue":  3
                },
     "300402":  {
                    "id":  300402,
@@ -338,7 +371,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "붉은 보석 원석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#DC143C"
+                   "color":  "#DC143C",
+                   "returnGoldValue":  10
                },
     "300403":  {
                    "id":  300403,
@@ -348,7 +382,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "푸른 보석 원석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#0000FF"
+                   "color":  "#0000FF",
+                   "returnGoldValue":  30
                },
     "300404":  {
                    "id":  300404,
@@ -358,7 +393,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "초록 보석 원석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#50C878"
+                   "color":  "#50C878",
+                   "returnGoldValue":  100
                },
     "300405":  {
                    "id":  300405,
@@ -368,7 +404,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "최고급 보석 원석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#E0FFFF"
+                   "color":  "#E0FFFF",
+                   "returnGoldValue":  300
                },
     "300406":  {
                    "id":  300406,
@@ -378,7 +415,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "드래곤의 눈 보석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FF4466"
+                   "color":  "#FF4466",
+                   "returnGoldValue":  1000
                },
     "300407":  {
                    "id":  300407,
@@ -388,7 +426,8 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "세계의 힘이 담긴 결정",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#9370DB"
+                   "color":  "#9370DB",
+                   "returnGoldValue":  3000
                },
     "300408":  {
                    "id":  300408,
@@ -398,6 +437,7 @@ const MATERIAL_DEFINITIONS = {
                    "description":  "창조의 힘이 담긴 보석",
                    "stackMax":  999,
                    "dropWeight":  100,
-                   "color":  "#FFD700"
+                   "color":  "#FFD700",
+                   "returnGoldValue":  10000
                }
 };

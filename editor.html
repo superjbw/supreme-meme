@@ -508,6 +508,7 @@
                             <option value="desert">사막</option>
                             <option value="night">밤</option>
                             <option value="sunset">석양</option>
+                            <option value="village">마을</option>
                         </select>
                     </div>
                     <div class="property-group">
@@ -604,7 +605,8 @@
                     { x1: 800, peak: 180, x2: 1200, color: '#7CAF6B' },
                     { x1: 1100, peak: 140, x2: 1400, color: '#9DC183' },
                     { x1: 1300, peak: 160, x2: 1600, color: '#7CAF6B' }
-                ]
+                ],
+                houses: []
             }
         };
 
@@ -1584,6 +1586,14 @@
                 js += `                { x1: ${m.x1}, peak: ${m.peak}, x2: ${m.x2}, color: '${m.color}' }`;
                 js += i < bg.mountains.length - 1 ? ',\n' : '\n';
             });
+            js += `            ],\n`;
+            js += `            houses: [\n`;
+            if (bg.houses && bg.houses.length > 0) {
+                bg.houses.forEach((h, i) => {
+                    js += `                { x: ${h.x}, width: ${h.width}, height: ${h.height}, roofHeight: ${h.roofHeight}, wallColor: '${h.wallColor}', roofColor: '${h.roofColor}' }`;
+                    js += i < bg.houses.length - 1 ? ',\n' : '\n';
+                });
+            }
             js += `            ]\n`;
             js += `        }\n`;
             js += `    }`;
@@ -1729,7 +1739,18 @@
                 cave: { skyTop: '#1a1a2e', skyBottom: '#2d2d44', mt1: '#3d3d5c', mt2: '#2d2d44' },
                 desert: { skyTop: '#f4a460', skyBottom: '#ffe4b5', mt1: '#deb887', mt2: '#d2b48c' },
                 night: { skyTop: '#0a0a23', skyBottom: '#1a1a3a', mt1: '#2a2a4a', mt2: '#1a1a3a' },
-                sunset: { skyTop: '#ff7e5f', skyBottom: '#feb47b', mt1: '#8B4513', mt2: '#A0522D' }
+                sunset: { skyTop: '#ff7e5f', skyBottom: '#feb47b', mt1: '#8B4513', mt2: '#A0522D' },
+                village: {
+                    skyTop: '#7EC8E3', skyBottom: '#F5F5DC', mt1: '#6B8E23', mt2: '#556B2F',
+                    houses: [
+                        { x: 100, width: 80, height: 70, roofHeight: 40, wallColor: '#D2691E', roofColor: '#8B0000' },
+                        { x: 300, width: 100, height: 90, roofHeight: 50, wallColor: '#DEB887', roofColor: '#A0522D' },
+                        { x: 550, width: 70, height: 60, roofHeight: 35, wallColor: '#F4A460', roofColor: '#800000' },
+                        { x: 750, width: 90, height: 80, roofHeight: 45, wallColor: '#D2B48C', roofColor: '#8B4513' },
+                        { x: 1000, width: 85, height: 75, roofHeight: 42, wallColor: '#DEB887', roofColor: '#A52A2A' },
+                        { x: 1200, width: 75, height: 65, roofHeight: 38, wallColor: '#F5DEB3', roofColor: '#800000' }
+                    ]
+                }
             };
             if (preset === 'custom' || !presets[preset]) return;
 
@@ -1740,6 +1761,12 @@
             stageData.background.mountains.forEach((m, i) => {
                 m.color = i % 2 === 0 ? p.mt1 : p.mt2;
             });
+            // 집 적용
+            if (p.houses) {
+                stageData.background.houses = JSON.parse(JSON.stringify(p.houses));
+            } else {
+                stageData.background.houses = [];
+            }
             updateBgUI();
             updateJSON();
             render();
@@ -1768,6 +1795,35 @@
                     ctx.lineTo((mt.x1 + mt.x2) / 2, FLOOR_Y - mt.peak);
                     ctx.lineTo(mt.x2, FLOOR_Y);
                     ctx.fill();
+                });
+            }
+
+            // 집 그리기
+            if (bg.houses) {
+                bg.houses.forEach(house => {
+                    // 집 몸체
+                    ctx.fillStyle = house.wallColor || '#D2691E';
+                    ctx.fillRect(house.x, FLOOR_Y - house.height, house.width, house.height);
+
+                    // 지붕
+                    ctx.fillStyle = house.roofColor || '#8B0000';
+                    ctx.beginPath();
+                    ctx.moveTo(house.x - 10, FLOOR_Y - house.height);
+                    ctx.lineTo(house.x + house.width / 2, FLOOR_Y - house.height - house.roofHeight);
+                    ctx.lineTo(house.x + house.width + 10, FLOOR_Y - house.height);
+                    ctx.fill();
+
+                    // 문
+                    ctx.fillStyle = '#4A2810';
+                    const doorW = house.width * 0.25;
+                    const doorH = house.height * 0.5;
+                    ctx.fillRect(house.x + house.width / 2 - doorW / 2, FLOOR_Y - doorH, doorW, doorH);
+
+                    // 창문
+                    ctx.fillStyle = '#87CEEB';
+                    const winSize = house.width * 0.2;
+                    ctx.fillRect(house.x + house.width * 0.15, FLOOR_Y - house.height * 0.75, winSize, winSize);
+                    ctx.fillRect(house.x + house.width * 0.65, FLOOR_Y - house.height * 0.75, winSize, winSize);
                 });
             }
 
