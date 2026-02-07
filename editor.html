@@ -456,6 +456,7 @@
                     <option value="potion">❤️ 포션</option>
                     <option value="lightning">⚡ 번개</option>
                     <option value="fireball">🔥 화염구</option>
+                    <option value="shuriken">✦ 표창</option>
                 </select>
             </div>
 
@@ -706,7 +707,7 @@
 
         // 서브타입 라벨 업데이트
         function updateSubTypeLabel(type) {
-            const itemNames = { potion: '포션', lightning: '번개', fireball: '화염구' };
+            const itemNames = { potion: '포션', lightning: '번개', fireball: '화염구', shuriken: '표창' };
 
             const selectId = type + 'Type';
             const labelId = type + 'TypeLabel';
@@ -1223,6 +1224,7 @@
                         <option value="potion" ${obj.type === 'potion' ? 'selected' : ''}>포션</option>
                         <option value="lightning" ${obj.type === 'lightning' ? 'selected' : ''}>번개</option>
                         <option value="fireball" ${obj.type === 'fireball' ? 'selected' : ''}>화염구</option>
+                        <option value="shuriken" ${obj.type === 'shuriken' ? 'selected' : ''}>표창</option>
                     </select>
                 </div>`;
             }
@@ -2041,6 +2043,31 @@
                 ctx.beginPath();
                 ctx.arc(x, y, 6, 0, Math.PI * 2);
                 ctx.fill();
+            } else if (type === 'shuriken') {
+                // 표창 (4방향 날)
+                ctx.fillStyle = '#5a5a5a';
+                ctx.strokeStyle = '#3a3a3a';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 4; i++) {
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(i * Math.PI / 2);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(-4, -4);
+                    ctx.lineTo(0, -14);
+                    ctx.lineTo(4, -4);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                // 중앙 원
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#7a7a7a';
+                ctx.fill();
+                ctx.stroke();
             }
 
             if (selected) {

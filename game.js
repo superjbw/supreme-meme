@@ -77,7 +77,7 @@ class UINotification {
         ctx.fillStyle = this.color;
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 3;
-        ctx.font = 'bold 18px Arial';
+        ctx.font = 'bold 18px MaplestoryOTFBold';
         ctx.textAlign = 'center';
         ctx.strokeText(this.text, this.x, this.y);
         ctx.fillText(this.text, this.x, this.y);
@@ -87,7 +87,7 @@ class UINotification {
 
 // 데미지 텍스트 클래스
 class DamageText {
-    constructor(x, y, damage, color = '#ff0', life = 60) {
+    constructor(x, y, damage, color = '#ff0', life = 60, fontSize = 28) {
         this.x = x;
         this.y = y;
         this.damage = damage;
@@ -96,6 +96,7 @@ class DamageText {
         this.velY = -3;
         this.life = life;
         this.maxLife = life;
+        this.fontSize = fontSize;
     }
 
     update() {
@@ -112,7 +113,7 @@ class DamageText {
         ctx.fillStyle = this.color;
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 3;
-        ctx.font = 'bold 20px Arial';
+        ctx.font = `bold ${this.fontSize}px MaplestoryOTFBold`;
         ctx.textAlign = 'center';
         ctx.strokeText(this.damage, this.x, this.y);
         ctx.fillText(this.damage, this.x, this.y);
@@ -250,6 +251,9 @@ class Player {
         this.fireballBuffTimer = 0;
         this.fireballBuffDuration = 600; // 10초
         this.orbitingFireballs = [];
+
+        // 표창 스택 (죽으면 리셋)
+        this.shurikenCount = 0;
 
         // 장비 시스템
         this.equipment = {
@@ -443,12 +447,7 @@ class Player {
         this.levelUpEffect = 120;
 
         // 레벨업 텍스트
-        damageTexts.push(new DamageText(
-            this.x + this.width / 2,
-            this.y - 30,
-            'LEVEL UP!',
-            '#ffff00'
-        ));
+        damageTexts.push(createText('levelUp', this.x + this.width / 2, this.y - 30));
 
         console.log(`레벨 업! Lv.${this.level} | HP: ${this.maxHp} | 공격력: ${this.attackDamage}`);
     }
@@ -545,12 +544,7 @@ class Player {
                 if (this.fireballBuffTimer <= 0) {
                     this.fireballBuff = false;
                     this.orbitingFireballs = [];
-                    damageTexts.push(new DamageText(
-                        this.x + this.width / 2,
-                        this.y - 20,
-                        '화염구 버프 종료',
-                        '#888888'
-                    ));
+                    damageTexts.push(createText('buffEndFire', this.x + this.width / 2, this.y - 20));
                 }
             }
 
@@ -670,12 +664,7 @@ class Player {
             this.lightningBuffTimer--;
             if (this.lightningBuffTimer <= 0) {
                 this.lightningBuff = false;
-                damageTexts.push(new DamageText(
-                    this.x + this.width / 2,
-                    this.y - 20,
-                    '번개 버프 종료',
-                    '#888888'
-                ));
+                damageTexts.push(createText('buffEndLightning', this.x + this.width / 2, this.y - 20));
             }
         }
 
@@ -689,14 +678,10 @@ class Player {
             if (this.fireballBuffTimer <= 0) {
                 this.fireballBuff = false;
                 this.orbitingFireballs = [];
-                damageTexts.push(new DamageText(
-                    this.x + this.width / 2,
-                    this.y - 20,
-                    '화염구 버프 종료',
-                    '#888888'
-                ));
+                damageTexts.push(createText('buffEndFire', this.x + this.width / 2, this.y - 20));
             }
         }
+
     }
 
     attack() {
@@ -705,10 +690,16 @@ class Player {
             this.attackTimer = 10;
             this.attackCooldown = 12;
 
-            // 부메랑 발사
+            // 표창 발사 (스택에 따라 같은 직선, 순차 출발, 사거리 증가)
             const boomerangX = this.x + this.width / 2 + (this.direction * 20);
             const boomerangY = this.y + this.height / 2;
-            boomerangs.push(new Boomerang(boomerangX, boomerangY, this.direction, this.getTotalAttackDamage()));
+            const totalShurikens = 1 + this.shurikenCount;
+
+            for (let i = 0; i < totalShurikens; i++) {
+                const delay = i * 6; // 6프레임 딜레이
+                const extraRange = i * 50; // 사거리 +50px (기본 30 + 추가 20)
+                boomerangs.push(new Boomerang(boomerangX, boomerangY, this.direction, this.getTotalAttackDamage(), delay, extraRange));
+            }
 
             // 랜덤 번개 OFF
             // if (Math.random() < 0.5) {
@@ -743,19 +734,14 @@ class Player {
             target.takeDamage(this.getTotalAttackDamage() * 2, targetX);
 
             // 번개 텍스트 (노란색)
-            damageTexts.push(new DamageText(targetX, target.y - 30, 'LIGHTNING!', '#ffff00'));
+            damageTexts.push(createText('lightning', targetX, target.y - 30));
         }
     }
 
     activateLightningBuff() {
         this.lightningBuff = true;
         this.lightningBuffTimer = this.lightningBuffDuration;
-        damageTexts.push(new DamageText(
-            this.x + this.width / 2,
-            this.y - 30,
-            '⚡ 번개 버프! (60초)',
-            '#00ffff'
-        ));
+        damageTexts.push(createText('buffLightning', this.x + this.width / 2, this.y - 30));
     }
 
     // 버프 번개 발동 (타격 시 호출)
@@ -782,12 +768,19 @@ class Player {
             this.orbitingFireballs.push(new OrbitingFireball(i, 8));
         }
 
-        damageTexts.push(new DamageText(
-            this.x + this.width / 2,
-            this.y - 30,
-            '🔥 화염구! (10초)',
-            '#ff6600'
-        ));
+        damageTexts.push(createText('buffFireball', this.x + this.width / 2, this.y - 30));
+    }
+
+    activateShurikenBuff() {
+        const maxStack = 9;
+        if (this.shurikenCount >= maxStack) {
+            damageTexts.push(createText('shurikenMax', this.x + this.width / 2, this.y - 30));
+            return;
+        }
+
+        this.shurikenCount++;
+
+        damageTexts.push(createText('shurikenAdd', this.x + this.width / 2, this.y - 30, this.shurikenCount + 1));
     }
 
     getAttackHitbox() {
@@ -819,7 +812,7 @@ class Player {
             this.hp -= actualDamage;
             this.invincible = true;
             this.invincibleTimer = 60;
-            damageTexts.push(new DamageText(this.x + this.width / 2, this.y, actualDamage, '#ff4444'));
+            damageTexts.push(createText('playerDamage', this.x + this.width / 2, this.y, actualDamage));
 
             // 넉백
             this.velX = this.direction * -5;
@@ -846,6 +839,9 @@ class Player {
         this.velY = 0;
         this.invincible = true;
         this.invincibleTimer = 120;
+
+        // 표창 스택 리셋 (무조건)
+        this.shurikenCount = 0;
     }
 
     jump() {
@@ -978,7 +974,7 @@ class Player {
             const dist = 30 + Math.sin((120 - this.levelUpEffect) * 0.1 + i) * 10;
             const starX = this.x + this.width / 2 + Math.cos(angle) * dist;
             const starY = this.y + this.height / 2 + Math.sin(angle) * dist;
-            ctx.font = '12px Arial';
+            ctx.font = '12px MaplestoryOTFBold';
             ctx.fillText('★', starX - 5, starY + 4);
         }
 
@@ -1041,7 +1037,7 @@ class Player {
         // 반짝이 스파크
         ctx.globalAlpha = alpha * flash;
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = '14px Arial';
+        ctx.font = '14px MaplestoryOTFBold';
         for (let i = 0; i < 6; i++) {
             const sparkAngle = progress * Math.PI * 4 + (i / 6) * Math.PI * 2;
             const sparkDist = 20 + progress * 30;
@@ -1363,12 +1359,7 @@ class Monster {
                     this.summonedGhosts.push(ghost);
 
                     // 소환 이펙트 텍스트
-                    damageTexts.push(new DamageText(
-                        ghost.x + ghost.width / 2,
-                        ghost.y,
-                        '소환!',
-                        '#8a2be2'
-                    ));
+                    damageTexts.push(createText('bossSummon', ghost.x + ghost.width / 2, ghost.y));
                 }
             }
 
@@ -1378,12 +1369,7 @@ class Monster {
                 this.noHitTimer = 0;
                 const regenAmount = Math.floor(this.maxHp * 0.1);
                 this.hp = Math.min(this.hp + regenAmount, this.maxHp);
-                damageTexts.push(new DamageText(
-                    this.x + this.width / 2,
-                    this.y - 20,
-                    '+' + regenAmount,
-                    '#00ff00'
-                ));
+                damageTexts.push(createText('bossRegen', this.x + this.width / 2, this.y - 20, regenAmount));
             }
         }
 
@@ -1397,7 +1383,7 @@ class Monster {
         if (this.type === 'ghostBoss') {
             this.noHitTimer = 0;
         }
-        damageTexts.push(new DamageText(this.x + this.width / 2, this.y, damage, '#ffff00'));
+        damageTexts.push(createText('monsterDamage', this.x + this.width / 2, this.y, damage));
 
         // 넉백 (공격자 반대 방향으로)
         const knockbackDir = this.x > attackerX ? 1 : -1;
@@ -1414,12 +1400,7 @@ class Monster {
                     if (ghost.alive) {
                         ghost.alive = false;
                         ghost.deathTimer = 0;
-                        damageTexts.push(new DamageText(
-                            ghost.x + ghost.width / 2,
-                            ghost.y,
-                            '소멸',
-                            '#8a2be2'
-                        ));
+                        damageTexts.push(createText('bossGhostDeath', ghost.x + ghost.width / 2, ghost.y));
                     }
                 });
                 this.summonedGhosts = [];
@@ -1436,12 +1417,7 @@ class Monster {
 
             // 경험치 획득 (테이블 데이터 사용)
             player.gainExp(this.expGain);
-            damageTexts.push(new DamageText(
-                this.x + this.width / 2,
-                this.y - 20,
-                '+' + this.expGain + ' EXP',
-                '#00ffff'
-            ));
+            damageTexts.push(createText('expGain', this.x + this.width / 2, this.y - 20, this.expGain));
 
             // 장비 드랍 (테이블 데이터 사용)
             const equipDropChance = this.equipDropChance;
@@ -2064,7 +2040,7 @@ class Coin {
         // G 표시
         if (Math.abs(scaleX) > 0.3) {
             ctx.fillStyle = '#daa520';
-            ctx.font = 'bold 12px Arial';
+            ctx.font = 'bold 12px MaplestoryOTFBold';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('G', 0, 0);
@@ -2091,7 +2067,7 @@ class Coin {
 // 코인 배열
 let coins = [];
 
-// 부메랑 배열
+// 표창 배열
 let boomerangs = [];
 
 // 스포너 배열
@@ -2285,12 +2261,7 @@ class OrbitingFireball {
                     monster.takeDamage(this.damage, this.x);
                     this.hitCooldowns.set(monster, this.hitCooldownTime);
                     // 화염 히트 이펙트
-                    damageTexts.push(new DamageText(
-                        monster.x + monster.width / 2,
-                        monster.y - 10,
-                        '🔥',
-                        '#ff4400'
-                    ));
+                    damageTexts.push(createText('fireHit', monster.x + monster.width / 2, monster.y - 10));
                 }
             }
         }
@@ -2478,9 +2449,9 @@ class Spawner {
     }
 }
 
-// 부메랑 클래스
+// 표창 클래스
 class Boomerang {
-    constructor(x, y, direction, damage) {
+    constructor(x, y, direction, damage, delay = 0, extraRange = 0) {
         this.x = x;
         this.y = y;
         this.width = 30;
@@ -2488,27 +2459,34 @@ class Boomerang {
         this.direction = direction;
         this.damage = damage;
         this.speed = 12;
-        this.maxDistance = 250;
+        this.maxDistance = 250 + extraRange;
         this.traveledDistance = 0;
         this.returning = false;
         this.rotation = 0;
-        this.hitMonsters = new Set(); // 이미 맞은 몬스터 추적
+        this.hitMonsters = new Set();
         this.alive = true;
+        this.delay = delay; // 출발 지연
     }
 
     update(player) {
-        // 회전
-        this.rotation += 0.4;
+        // 출발 지연 처리
+        if (this.delay > 0) {
+            this.delay--;
+            return this.alive;
+        }
+
+        // 회전 (느리게)
+        this.rotation += 0.15;
 
         if (!this.returning) {
-            // 나가는 중
+            // 직선으로 나감
             this.x += this.speed * this.direction;
             this.traveledDistance += this.speed;
 
             // 최대 거리 도달 시 복귀
             if (this.traveledDistance >= this.maxDistance) {
                 this.returning = true;
-                this.hitMonsters.clear(); // 복귀 시 다시 타격 가능
+                this.hitMonsters.clear();
             }
         } else {
             // 플레이어에게 복귀
@@ -2517,10 +2495,8 @@ class Boomerang {
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < 20) {
-                // 플레이어에게 도달하면 사라짐
                 this.alive = false;
             } else {
-                // 플레이어 방향으로 이동
                 this.x += (dx / dist) * this.speed;
                 this.y += (dy / dist) * this.speed;
             }
@@ -2550,27 +2526,37 @@ class Boomerang {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
 
-        // 부메랑 모양 (V자 형태)
-        ctx.fillStyle = '#8B4513';
-        ctx.strokeStyle = '#5D3A1A';
-        ctx.lineWidth = 2;
+        // 표창 모양 (십자 형태)
+        ctx.fillStyle = '#4a4a4a';
+        ctx.strokeStyle = '#2a2a2a';
+        ctx.lineWidth = 1;
 
+        // 4방향 날
+        for (let i = 0; i < 4; i++) {
+            ctx.save();
+            ctx.rotate(i * Math.PI / 2);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-4, -4);
+            ctx.lineTo(0, -14);
+            ctx.lineTo(4, -4);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // 중앙 원
         ctx.beginPath();
-        // 부메랑 V 형태
-        ctx.moveTo(-12, -3);
-        ctx.lineTo(0, -8);
-        ctx.lineTo(12, -3);
-        ctx.lineTo(12, 3);
-        ctx.lineTo(0, 0);
-        ctx.lineTo(-12, 3);
-        ctx.closePath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#6a6a6a';
         ctx.fill();
         ctx.stroke();
 
         // 하이라이트
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
         ctx.beginPath();
-        ctx.ellipse(-6, -2, 4, 2, -0.3, 0, Math.PI * 2);
+        ctx.arc(-1, -1, 2, 0, Math.PI * 2);
         ctx.fill();
 
         // 빛나는 효과 (복귀 중일 때)
@@ -2621,6 +2607,8 @@ class Item {
             this.color = '#00ffff';
         } else if (type === 'fireball') {
             this.color = '#ff6600';
+        } else if (type === 'shuriken') {
+            this.color = '#8a8a8a';
         }
     }
 
@@ -2679,7 +2667,7 @@ class Item {
 
             // 하트 아이콘
             ctx.fillStyle = '#fff';
-            ctx.font = '10px Arial';
+            ctx.font = '10px MaplestoryOTFBold';
             ctx.textAlign = 'center';
             ctx.fillText('♥', this.x + 12, drawY - 5);
             ctx.textAlign = 'left';
@@ -2713,7 +2701,7 @@ class Item {
             ctx.fillStyle = '#ffff00';
             ctx.shadowColor = '#ffff00';
             ctx.shadowBlur = 8;
-            ctx.font = 'bold 14px Arial';
+            ctx.font = 'bold 14px MaplestoryOTFBold';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('⚡', centerX, centerY);
@@ -2737,7 +2725,7 @@ class Item {
             ctx.fillStyle = '#ffff00';
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
-            ctx.font = 'bold 12px Arial';
+            ctx.font = 'bold 12px MaplestoryOTFBold';
             ctx.textAlign = 'center';
             ctx.strokeText('⚡', this.x + 12, drawY - 8);
             ctx.fillText('⚡', this.x + 12, drawY - 8);
@@ -2789,10 +2777,69 @@ class Item {
             ctx.fillStyle = '#ff4400';
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 2;
-            ctx.font = 'bold 12px Arial';
+            ctx.font = 'bold 12px MaplestoryOTFBold';
             ctx.textAlign = 'center';
             ctx.strokeText('🔥', this.x + 12, drawY - 8);
             ctx.fillText('🔥', this.x + 12, drawY - 8);
+            ctx.textAlign = 'left';
+        } else if (this.type === 'shuriken') {
+            // 표창 아이템 오브
+            const centerX = this.x + 12;
+            const centerY = drawY + 14;
+
+            // 외부 광채
+            ctx.shadowColor = '#aaaaaa';
+            ctx.shadowBlur = 15;
+            const outerGlow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 20);
+            outerGlow.addColorStop(0, 'rgba(180, 180, 180, 0.6)');
+            outerGlow.addColorStop(0.5, 'rgba(120, 120, 120, 0.3)');
+            outerGlow.addColorStop(1, 'rgba(80, 80, 80, 0)');
+            ctx.fillStyle = outerGlow;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 회전하는 표창
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(this.animFrame * 0.15);
+
+            // 4방향 날
+            ctx.fillStyle = '#5a5a5a';
+            ctx.strokeStyle = '#3a3a3a';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 4; i++) {
+                ctx.save();
+                ctx.rotate(i * Math.PI / 2);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-3, -3);
+                ctx.lineTo(0, -12);
+                ctx.lineTo(3, -3);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // 중앙 원
+            ctx.beginPath();
+            ctx.arc(0, 0, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#7a7a7a';
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+            ctx.restore();
+
+            // 표창 아이콘 (위에 표시)
+            ctx.fillStyle = '#6a6a6a';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.font = 'bold 12px MaplestoryOTFBold';
+            ctx.textAlign = 'center';
+            ctx.strokeText('✦', this.x + 12, drawY - 8);
+            ctx.fillText('✦', this.x + 12, drawY - 8);
             ctx.textAlign = 'left';
         } else {
             ctx.restore();
@@ -2818,16 +2865,13 @@ class Item {
             if (player.hp > player.maxHp) player.hp = player.maxHp;
 
             // 회복 텍스트
-            damageTexts.push(new DamageText(
-                player.x + player.width / 2,
-                player.y,
-                '+' + healedAmount,
-                '#44ff44'
-            ));
+            damageTexts.push(createText('potionHeal', player.x + player.width / 2, player.y, healedAmount));
         } else if (this.type === 'lightning') {
             player.activateLightningBuff();
         } else if (this.type === 'fireball') {
             player.activateFireballBuff();
+        } else if (this.type === 'shuriken') {
+            player.activateShurikenBuff();
         }
     }
 }
@@ -2948,7 +2992,7 @@ class EquipmentItem {
 
         // 이름 표시
         ctx.fillStyle = rarityColor;
-        ctx.font = 'bold 10px Arial';
+        ctx.font = 'bold 10px MaplestoryOTFBold';
         ctx.textAlign = 'center';
         ctx.fillText(this.definition.name, this.x + 14, drawY - 5);
         ctx.textAlign = 'left';
@@ -2993,20 +3037,10 @@ class EquipmentItem {
         if (player.addToInventory(this.equipmentId)) {
             this.collected = true;
             const rarityColor = RARITY_COLORS[this.definition.rarity];
-            damageTexts.push(new DamageText(
-                player.x + player.width / 2,
-                player.y - 20,
-                this.definition.name + ' 획득!',
-                rarityColor
-            ));
+            damageTexts.push(createText('equipGet', player.x + player.width / 2, player.y - 20, this.definition.name, rarityColor));
             return true;
         } else {
-            damageTexts.push(new DamageText(
-                player.x + player.width / 2,
-                player.y - 20,
-                '인벤토리 가득!',
-                '#FF0000'
-            ));
+            damageTexts.push(createText('inventoryFull', player.x + player.width / 2, player.y - 20));
             return false;
         }
     }
@@ -3073,7 +3107,7 @@ class Portal {
             ctx.fillStyle = '#fff';
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 3;
-            ctx.font = 'bold 12px Arial';
+            ctx.font = 'bold 12px MaplestoryOTFBold';
             ctx.textAlign = 'center';
             ctx.strokeText(labelText, this.x + this.width / 2, this.y - 15);
             ctx.fillText(labelText, this.x + this.width / 2, this.y - 15);
@@ -3082,7 +3116,7 @@ class Portal {
 
         // ↑ 키 안내
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.font = '10px Arial';
+        ctx.font = '10px MaplestoryOTFBold';
         ctx.textAlign = 'center';
         ctx.fillText('↑ 진입', this.x + this.width / 2, this.y + this.height + 15);
         ctx.textAlign = 'left';
@@ -3175,7 +3209,11 @@ const stages = {    "Stage001": {
             { x: 630, y: 355, type: 'lightning' },
             { x: 1400, y: 525, type: 'lightning' },
             { x: 280, y: 495, type: 'fireball' },
-            { x: 1080, y: 395, type: 'fireball' }
+            { x: 1080, y: 395, type: 'fireball' },
+            { x: 850, y: 445, type: 'shuriken' },
+            { x: 200, y: 545, type: 'shuriken' },
+            { x: 550, y: 495, type: 'shuriken' },
+            { x: 1200, y: 545, type: 'shuriken' }
         ],
         monsters: [
             { x: 500, y: 710, monsterId: 100001 },
@@ -3263,7 +3301,8 @@ const stages = {    "Stage001": {
             { x: 630, y: 355, type: 'lightning' },
             { x: 1380, y: 375, type: 'lightning' },
             { x: 110, y: 495, type: 'fireball' },
-            { x: 880, y: 425, type: 'fireball' }
+            { x: 880, y: 425, type: 'fireball' },
+            { x: 520, y: 455, type: 'shuriken' }
         ],
         monsters: [
             { x: 250, y: 560, monsterId: 100001 },
@@ -3361,7 +3400,8 @@ const stages = {    "Stage001": {
             { x: 630, y: 355, type: 'lightning' },
             { x: 1380, y: 375, type: 'lightning' },
             { x: 110, y: 495, type: 'fireball' },
-            { x: 880, y: 425, type: 'fireball' }
+            { x: 880, y: 425, type: 'fireball' },
+            { x: 700, y: 465, type: 'shuriken' }
         ],
         monsters: [
             { x: 250, y: 560, monsterId: 100001 },
@@ -3502,14 +3542,10 @@ function applyStageData(stage, stageName) {
         player.lightningBuffTimer = 0;
         player.fireballBuff = false;
         player.fireballBuffTimer = 0;
+        player.shurikenCount = 0;
         player.hp = player.maxHp;
         if (previousStage && previousStage !== "Lobby") {
-            damageTexts.push(new DamageText(
-                player.x + player.width / 2,
-                player.y - 30,
-                '체력 회복!',
-                '#00ff00'
-            ));
+            damageTexts.push(createText('lobbyHeal', player.x + player.width / 2, player.y - 30));
         }
     }
 
@@ -3531,7 +3567,7 @@ function applyStageData(stage, stageName) {
     // 코인 초기화 (스테이지 이동 시 기존 드랍 코인 제거)
     coins = [];
 
-    // 부메랑 초기화
+    // 표창 초기화
     boomerangs = [];
 
     // 번개 초기화
@@ -3616,7 +3652,7 @@ document.addEventListener('keydown', (e) => {
             for (let portal of portals) {
                 if (portal.collidesWith(player)) {
                     if (isPreviewMode) {
-                        damageTexts.push(new DamageText(player.x + player.width/2, player.y - 20, '미리보기 모드', '#9333ea'));
+                        damageTexts.push(createText('previewMode', player.x + player.width/2, player.y - 20));
                         break;
                     }
                     loadStage(portal.targetStage);
@@ -4052,7 +4088,7 @@ function drawUI() {
         ctx.lineWidth = 2;
         ctx.strokeRect(10, 10, 140, 30);
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 14px Arial';
+        ctx.font = 'bold 14px MaplestoryOTFBold';
         ctx.textAlign = 'center';
         ctx.fillText('미리보기 모드', 80, 30);
         ctx.textAlign = 'left';
@@ -4065,7 +4101,7 @@ function drawUI() {
     ctx.lineWidth = 2;
     ctx.strokeRect(canvas.width - 180, 10, 170, 30);
     ctx.fillStyle = '#ffd700';
-    ctx.font = 'bold 13px Arial';
+    ctx.font = 'bold 13px MaplestoryOTFBold';
     ctx.textAlign = 'center';
     ctx.fillText(`${stageNum}. ${stageName}`, canvas.width - 95, 30);
     ctx.textAlign = 'left';
@@ -4083,13 +4119,13 @@ function drawUI() {
     ctx.arc(canvas.width - 145, 57, 8, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = '#daa520';
-    ctx.font = 'bold 10px Arial';
+    ctx.font = 'bold 10px MaplestoryOTFBold';
     ctx.textAlign = 'center';
     ctx.fillText('G', canvas.width - 145, 61);
 
     // 코인 수
     ctx.fillStyle = '#ffd700';
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 14px MaplestoryOTFBold';
     ctx.textAlign = 'left';
     ctx.fillText(`${player.gold}`, canvas.width - 130, 62);
 
@@ -4102,12 +4138,12 @@ function drawUI() {
 
     // 레벨 표시
     ctx.fillStyle = '#ffff00';
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 14px MaplestoryOTFBold';
     ctx.fillText(`Lv.${player.level}`, 15, 28);
 
     // HP 텍스트
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 12px Arial';
+    ctx.font = 'bold 12px MaplestoryOTFBold';
     ctx.fillText('HP', 70, 28);
 
     // HP 바
@@ -4126,14 +4162,14 @@ function drawUI() {
 
     // HP 숫자
     ctx.fillStyle = '#fff';
-    ctx.font = '10px Arial';
+    ctx.font = '10px MaplestoryOTFBold';
     ctx.textAlign = 'center';
     ctx.fillText(`${player.hp}/${totalMaxHp}`, 152, 27);
     ctx.textAlign = 'left';
 
     // EXP 텍스트
     ctx.fillStyle = '#00ffff';
-    ctx.font = 'bold 12px Arial';
+    ctx.font = 'bold 12px MaplestoryOTFBold';
     ctx.fillText('EXP', 15, 48);
 
     // EXP 바
@@ -4150,14 +4186,14 @@ function drawUI() {
 
     // EXP 숫자
     ctx.fillStyle = '#fff';
-    ctx.font = '10px Arial';
+    ctx.font = '10px MaplestoryOTFBold';
     ctx.textAlign = 'center';
     ctx.fillText(`${player.exp}/${player.expToNextLevel}`, 127, 48);
     ctx.textAlign = 'left';
 
     // 공격력 표시
     ctx.fillStyle = '#ff6b6b';
-    ctx.font = '11px Arial';
+    ctx.font = '11px MaplestoryOTFBold';
     ctx.fillText(`ATK: ${player.getTotalAttackDamage()}`, 15, 68);
     ctx.fillStyle = '#6b9fff';
     ctx.fillText(`DEF: ${player.getTotalDefense()}`, 70, 68);
@@ -4185,10 +4221,10 @@ function drawUI() {
 
         // 번개 아이콘과 텍스트
         ctx.fillStyle = '#ffff00';
-        ctx.font = 'bold 14px Arial';
+        ctx.font = 'bold 14px MaplestoryOTFBold';
         ctx.fillText('⚡', 18, buffY + 17);
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 12px Arial';
+        ctx.font = 'bold 12px MaplestoryOTFBold';
         ctx.fillText(`번개 ${buffSeconds}초`, 38, buffY + 16);
 
         buffY += 28;
@@ -4210,11 +4246,34 @@ function drawUI() {
 
         // 화염 아이콘과 텍스트
         ctx.fillStyle = '#ffff00';
-        ctx.font = 'bold 14px Arial';
+        ctx.font = 'bold 14px MaplestoryOTFBold';
         ctx.fillText('🔥', 16, buffY + 17);
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 12px Arial';
+        ctx.font = 'bold 12px MaplestoryOTFBold';
         ctx.fillText(`화염 ${buffSeconds}초`, 38, buffY + 16);
+
+        buffY += 28;
+    }
+
+    // 표창 스택 표시
+    if (player.shurikenCount > 0) {
+        ctx.fillStyle = 'rgba(80, 80, 80, 0.8)';
+        ctx.fillRect(10, buffY, 120, 24);
+        ctx.strokeStyle = '#aaaaaa';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(10, buffY, 120, 24);
+
+        // 스택 바 (가득 참)
+        ctx.fillStyle = '#888888';
+        ctx.fillRect(12, buffY + 2, 116, 20);
+
+        // 표창 아이콘과 텍스트
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px MaplestoryOTFBold';
+        ctx.fillText('✦', 18, buffY + 17);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px MaplestoryOTFBold';
+        ctx.fillText(`표창 x${player.shurikenCount + 1}`, 38, buffY + 16);
     }
 
     // 미니맵
@@ -4352,7 +4411,7 @@ function drawUI() {
 
     // 가방 텍스트
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 10px Arial';
+    ctx.font = 'bold 10px MaplestoryOTFBold';
     ctx.textAlign = 'center';
     ctx.fillText('가방', btnX + btnSize / 2, btnY + btnSize + 12);
     ctx.textAlign = 'left';
@@ -4374,7 +4433,7 @@ function drawUI() {
 
         // 보스 이름
         ctx.fillStyle = '#ff6666';
-        ctx.font = 'bold 11px Arial';
+        ctx.font = 'bold 11px MaplestoryOTFBold';
         ctx.textAlign = 'center';
         ctx.fillText(bossMonster.name, canvas.width / 2, bossBarY - 5);
 
@@ -4398,7 +4457,7 @@ function drawUI() {
 
         // HP 숫자
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 10px Arial';
+        ctx.font = 'bold 10px MaplestoryOTFBold';
         ctx.fillText(`${bossMonster.hp} / ${bossMonster.maxHp}`, canvas.width / 2, bossBarY + 10);
         ctx.textAlign = 'left';
     }
@@ -4429,7 +4488,7 @@ function drawEquipmentPanel() {
 
     // 제목
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 18px Arial';
+    ctx.font = 'bold 18px MaplestoryOTFBold';
     ctx.textAlign = 'center';
     ctx.fillText('가방', panelX + panelWidth / 2, panelY + 30);
 
@@ -4437,7 +4496,7 @@ function drawEquipmentPanel() {
     ctx.fillStyle = '#FF4444';
     ctx.fillRect(panelX + panelWidth - 30, panelY + 5, 25, 25);
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 16px Arial';
+    ctx.font = 'bold 16px MaplestoryOTFBold';
     ctx.fillText('X', panelX + panelWidth - 17, panelY + 22);
 
     // 장비 슬롯 (좌측) - 캐릭터 중심 레이아웃
@@ -4510,7 +4569,7 @@ function drawEquipmentPanel() {
 
         // 슬롯 라벨 (슬롯 아래)
         ctx.fillStyle = '#888888';
-        ctx.font = '9px Arial';
+        ctx.font = '9px MaplestoryOTFBold';
         ctx.textAlign = 'center';
         ctx.fillText(SLOT_NAMES[slot], slotX + slotSize / 2, slotY + slotSize + 11);
 
@@ -4527,7 +4586,7 @@ function drawEquipmentPanel() {
 
                 // 등급 표시 (왼쪽 위)
                 ctx.fillStyle = RARITY_COLORS[def.rarity];
-                ctx.font = 'bold 10px Arial';
+                ctx.font = 'bold 10px MaplestoryOTFBold';
                 ctx.textAlign = 'left';
                 ctx.fillText(def.rarity, slotX + 2, slotY + 11);
             }
@@ -4556,7 +4615,7 @@ function drawEquipmentPanel() {
 
         // 탭 텍스트
         ctx.fillStyle = isSelected ? '#FFFFFF' : '#AAAAAA';
-        ctx.font = 'bold 11px Arial';
+        ctx.font = 'bold 11px MaplestoryOTFBold';
         ctx.textAlign = 'center';
         ctx.fillText(TAB_NAMES[tab], tx + tabWidth / 2, tabY + 17);
     }
@@ -4627,7 +4686,7 @@ function drawEquipmentPanel() {
 
                 // 등급 표시 (왼쪽 위)
                 ctx.fillStyle = RARITY_COLORS[def.rarity];
-                ctx.font = 'bold 10px Arial';
+                ctx.font = 'bold 10px MaplestoryOTFBold';
                 ctx.textAlign = 'left';
                 ctx.fillText(def.rarity, itemX + 3, itemY + 11);
 
@@ -4636,7 +4695,7 @@ function drawEquipmentPanel() {
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
                     ctx.fillRect(itemX, itemY + invSlotSize - 14, invSlotSize, 14);
                     ctx.fillStyle = '#00FF00';
-                    ctx.font = 'bold 9px Arial';
+                    ctx.font = 'bold 9px MaplestoryOTFBold';
                     ctx.textAlign = 'center';
                     ctx.fillText('장착중', itemX + invSlotSize / 2, itemY + invSlotSize - 3);
                 }
@@ -4657,7 +4716,7 @@ function drawEquipmentPanel() {
     ctx.lineWidth = 1;
     ctx.strokeRect(scrollX, scrollUpY, scrollBtnSize, scrollBtnSize);
     ctx.fillStyle = inventoryScrollRow > 0 ? '#FFFFFF' : '#666666';
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 14px MaplestoryOTFBold';
     ctx.textAlign = 'center';
     ctx.fillText('▲', scrollX + scrollBtnSize / 2, scrollUpY + 17);
 
@@ -4668,20 +4727,20 @@ function drawEquipmentPanel() {
     ctx.lineWidth = 1;
     ctx.strokeRect(scrollX, scrollDownY, scrollBtnSize, scrollBtnSize);
     ctx.fillStyle = inventoryScrollRow < maxScrollRow ? '#FFFFFF' : '#666666';
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 14px MaplestoryOTFBold';
     ctx.textAlign = 'center';
     ctx.fillText('▼', scrollX + scrollBtnSize / 2, scrollDownY + 17);
 
     // 페이지 정보
     ctx.fillStyle = '#AAAAAA';
-    ctx.font = '10px Arial';
+    ctx.font = '10px MaplestoryOTFBold';
     ctx.textAlign = 'center';
     const pageInfo = `${inventoryScrollRow + 1}/${Math.max(1, totalRows - invRows + 1)}`;
     ctx.fillText(pageInfo, scrollX + scrollBtnSize / 2, scrollUpY + scrollBtnSize + (scrollDownY - scrollUpY - scrollBtnSize) / 2 + 4);
 
     // 스탯 표시
     ctx.fillStyle = '#CCCCCC';
-    ctx.font = '12px Arial';
+    ctx.font = '12px MaplestoryOTFBold';
     ctx.textAlign = 'left';
 
     const statsY = panelY + panelHeight - 60;
@@ -4726,7 +4785,7 @@ function drawEquipmentDetail() {
     ctx.fillStyle = '#FF4444';
     ctx.fillRect(detailX + detailW - 25, detailY + 5, 20, 20);
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 14px MaplestoryOTFBold';
     ctx.textAlign = 'center';
     ctx.fillText('X', detailX + detailW - 15, detailY + 19);
 
@@ -4743,24 +4802,24 @@ function drawEquipmentDetail() {
 
     // 등급 표시
     ctx.fillStyle = RARITY_COLORS[def.rarity];
-    ctx.font = 'bold 12px Arial';
+    ctx.font = 'bold 12px MaplestoryOTFBold';
     ctx.textAlign = 'left';
     ctx.fillText(def.rarity, iconX + 3, iconY + 14);
 
     // 이름
     ctx.fillStyle = RARITY_COLORS[def.rarity];
-    ctx.font = 'bold 16px Arial';
+    ctx.font = 'bold 16px MaplestoryOTFBold';
     ctx.fillText(def.name, iconX + iconSize + 10, iconY + 20);
 
     // 종류
     ctx.fillStyle = '#AAAAAA';
-    ctx.font = '12px Arial';
+    ctx.font = '12px MaplestoryOTFBold';
     const typeName = SLOT_NAMES[def.type] || TAB_NAMES[category] || def.type;
     ctx.fillText(typeName, iconX + iconSize + 10, iconY + 38);
 
     // 스탯/설명
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '13px Arial';
+    ctx.font = '13px MaplestoryOTFBold';
     let statY = detailY + 85;
 
     if (category === 'equipment' && def.stats) {
@@ -4817,7 +4876,7 @@ function drawEquipmentDetail() {
         ctx.strokeRect(detailX + 20, btnY, 80, 30);
 
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 14px Arial';
+        ctx.font = 'bold 14px MaplestoryOTFBold';
         ctx.textAlign = 'center';
         ctx.fillText(btnText, detailX + 60, btnY + 20);
     }
@@ -4834,7 +4893,7 @@ function drawEquipmentDetail() {
         ctx.strokeRect(sellBtnX, btnY, 90, 30);
 
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 12px Arial';
+        ctx.font = 'bold 12px MaplestoryOTFBold';
         ctx.textAlign = 'center';
         ctx.fillText(`판매 ${sellValue}G`, sellBtnX + 45, btnY + 20);
     }
@@ -5020,12 +5079,7 @@ function handleCombat() {
                 const isCritical = Math.random() < 0.1;
                 if (isCritical) {
                     damage *= 5;
-                    damageTexts.push(new DamageText(
-                        monster.x + monster.width / 2,
-                        monster.y - 40,
-                        'CRITICAL!',
-                        '#ff0000'
-                    ));
+                    damageTexts.push(createText('critical', monster.x + monster.width / 2, monster.y - 40));
                 }
 
                 monster.takeDamage(damage, player.x);
@@ -5053,23 +5107,13 @@ function handleCombat() {
                     const isCritical = Math.random() < 0.1;
                     if (isCritical) {
                         stompDamage *= 5;
-                        damageTexts.push(new DamageText(
-                            monster.x + monster.width / 2,
-                            monster.y - 50,
-                            'CRITICAL!',
-                            '#ff0000'
-                        ));
+                        damageTexts.push(createText('critical', monster.x + monster.width / 2, monster.y - 50));
                     }
 
                     monster.takeDamage(stompDamage, player.x + player.width / 2);
 
                     // 내리찍기 텍스트
-                    damageTexts.push(new DamageText(
-                        monster.x + monster.width / 2,
-                        monster.y - 30,
-                        'STOMP!',
-                        '#ff8800'
-                    ));
+                    damageTexts.push(createText('stomp', monster.x + monster.width / 2, monster.y - 30));
 
                     // 플레이어 바운스
                     player.velY = -10;
@@ -5154,12 +5198,7 @@ function gameLoop() {
             const value = c.collect();
             if (value > 0) {
                 player.gold += value;
-                damageTexts.push(new DamageText(
-                    player.x + player.width / 2,
-                    player.y - 10,
-                    '+' + value + ' coin',
-                    '#ffd700'
-                ));
+                damageTexts.push(createText('coinGet', player.x + player.width / 2, player.y - 10, value));
             }
         }
     });
@@ -5196,7 +5235,7 @@ function gameLoop() {
     }
     monsters.forEach(m => m.draw(ctx));
 
-    // 부메랑 업데이트 및 그리기
+    // 표창 업데이트 및 그리기
     boomerangs = boomerangs.filter(b => b.update(player));
     boomerangs.forEach(b => {
         b.draw(ctx);
@@ -5208,12 +5247,7 @@ function gameLoop() {
                 const isCritical = Math.random() < 0.1;
                 if (isCritical) {
                     damage *= 5;
-                    damageTexts.push(new DamageText(
-                        monster.x + monster.width / 2,
-                        monster.y - 40,
-                        'CRITICAL!',
-                        '#ff0000'
-                    ));
+                    damageTexts.push(createText('critical', monster.x + monster.width / 2, monster.y - 40));
                 }
 
                 monster.takeDamage(damage, b.x);

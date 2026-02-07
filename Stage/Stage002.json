@@ -360,6 +360,11 @@
       "x": 880,
       "y": 425,
       "type": "fireball"
+    },
+    {
+      "x": 520,
+      "y": 455,
+      "type": "shuriken"
     }
   ],
   "portals": [

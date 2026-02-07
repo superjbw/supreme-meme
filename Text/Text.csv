@@ -1,0 +1,24 @@
+﻿id,key,text,color,fontSize,life
+500001,levelUp,LEVEL UP!,#ffff00,16,60
+500002,buffEndFire,화염구 버프 종료,#888888,14,60
+500003,buffEndLightning,번개 버프 종료,#888888,14,60
+500004,lightning,LIGHTNING!,#ffff00,24,60
+500005,buffLightning,⚡ 번개 버프! (60초),#00ffff,14,60
+500006,buffFireball,🔥 화염구! (10초),#ff6600,14,60
+500007,shurikenMax,✦ 표창 최대!,#888888,14,60
+500008,shurikenAdd,✦ 표창 +1 (총 {0}개),#6a6a6a,14,60
+500009,playerDamage,{0},#ff4444,28,60
+500010,bossSummon,소환!,#8a2be2,18,60
+500011,bossRegen,0,#00ff00,20,60
+500012,monsterDamage,{0},#ffff00,28,60
+500013,bossGhostDeath,소멸,#8a2be2,18,60
+500014,expGain,+{0} EXP,#00ffff,16,60
+500015,fireHit,🔥,#ff4400,20,30
+500016,potionHeal,0,#44ff44,20,60
+500017,equipGet,{0} 획득!,{1},14,60
+500018,inventoryFull,인벤토리 가득!,#FF0000,14,60
+500019,lobbyHeal,체력 회복!,#00ff00,18,60
+500020,previewMode,미리보기 모드,#9333ea,16,60
+500021,critical,CRITICAL!,#ff0000,20,60
+500022,stomp,STOMP!,#ff8800,18,60
+500023,coinGet,+{0} G,#ffd700,16,60

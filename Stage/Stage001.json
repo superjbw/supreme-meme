@@ -300,6 +300,26 @@
       "x": 1080,
       "y": 395,
       "type": "fireball"
+    },
+    {
+      "x": 850,
+      "y": 445,
+      "type": "shuriken"
+    },
+    {
+      "x": 200,
+      "y": 545,
+      "type": "shuriken"
+    },
+    {
+      "x": 550,
+      "y": 495,
+      "type": "shuriken"
+    },
+    {
+      "x": 1200,
+      "y": 545,
+      "type": "shuriken"
     }
   ],
   "portals": [
