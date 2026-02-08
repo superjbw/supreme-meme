@@ -159,6 +159,7 @@ const SLOT_NAMES = {
 let equipmentPanelOpen = false;
 let selectedInventoryIndex = -1;
 let equipmentButtonBounds = { x: 0, y: 0, width: 80, height: 35 };
+let worldMapButtonBounds = { x: 0, y: 0, width: 36, height: 36 };
 let selectedEquipmentTab = 'weapon'; // 현재 선택된 탭
 const EQUIPMENT_TABS = ['weapon', 'helmet', 'armor', 'boots', 'material', 'item'];
 const TAB_NAMES = { weapon: '무기', helmet: '투구', armor: '갑옷', boots: '신발', material: '재료', item: '아이템' };
@@ -191,6 +192,13 @@ function findDefinition(id) {
 let viewingEquipmentId = null; // 상세 정보 보기 중인 장비 ID
 let viewingEquipmentSlot = null; // 장착 슬롯에서 보는 경우 슬롯 이름
 let inventoryScrollRow = 0; // 인벤토리 스크롤 행 위치
+let sellQuantity = 1; // 판매 수량 (재료/아이템용)
+
+// 월드맵 UI 상태
+let showWorldMap = false;
+let worldMapHoverNode = null;
+let worldMapAnimTimer = 0;
+const unlockedStages = new Set(["Lobby"]);
 
 // 장비 아이템 배열
 let equipmentItems = [];
@@ -211,6 +219,13 @@ class Player {
         this.direction = 1;
         this.animFrame = 0;
         this.animTimer = 0;
+
+        // 스프라이트 시스템
+        this.sprites = { idle: [] };
+        this.spritesLoaded = { idle: false };
+        this.idleFrame = 0;
+        this.idleTimer = 0;
+        this.loadSprites();
 
         // 플랫폼 통과
         this.droppingDown = false;
@@ -280,6 +295,27 @@ class Player {
         };
     }
 
+    loadSprites() {
+        // Idle 스프라이트 로드 (idle_1.png ~ idle_6.png)
+        const idleFrames = 6;
+        let loadedCount = 0;
+        for (let i = 1; i <= idleFrames; i++) {
+            const img = new Image();
+            img.src = `Assets/Player/Idle/idle_${i}.png`;
+            img.onload = () => {
+                loadedCount++;
+                if (loadedCount === idleFrames) {
+                    this.spritesLoaded.idle = true;
+                }
+            };
+            img.onerror = () => {
+                // 이미지 로드 실패 시 기본 캔버스 그림 사용
+                this.spritesLoaded.idle = false;
+            };
+            this.sprites.idle.push(img);
+        }
+    }
+
     // 장비 장착
     equipItem(equipmentId) {
         const item = EQUIPMENT_DEFINITIONS[equipmentId];
@@ -327,7 +363,20 @@ class Player {
         const def = found.def;
         const goldValue = def.returnGoldValue || 0;
 
-        // 인벤토리에서 아이템 찾기 및 제거
+        // 재료/아이템: 스택에서 1개 차감
+        if (slot === 'material' || slot === 'item') {
+            const stack = this.inventory[slot].find(s => s.id === itemId);
+            if (!stack) return { success: false, gold: 0 };
+            stack.count--;
+            if (stack.count <= 0) {
+                const idx = this.inventory[slot].indexOf(stack);
+                this.inventory[slot].splice(idx, 1);
+            }
+            this.gold += goldValue;
+            return { success: true, gold: goldValue };
+        }
+
+        // 장비: 기존 방식
         const invIndex = this.inventory[slot].indexOf(itemId);
         if (invIndex === -1) return { success: false, gold: 0 };
 
@@ -400,6 +449,35 @@ class Player {
             return false;
         }
 
+        // 재료/아이템: 스택 시스템 (슬롯당 999개)
+        if (category === 'material' || category === 'item') {
+            const existing = this.inventory[slot].find(s => s.id === itemId);
+            if (existing) {
+                if (existing.count >= 999) return false;
+                existing.count++;
+                return true;
+            }
+            // 새 스택 추가
+            if (this.inventory[slot].length >= this.maxInventoryPerSlot) {
+                return false;
+            }
+            // 등급 순서에 따라 삽입 위치 찾기
+            const newRarityIndex = RARITY_ORDER.indexOf(item.rarity);
+            let insertIndex = this.inventory[slot].length;
+            for (let i = 0; i < this.inventory[slot].length; i++) {
+                const existingFound = findDefinition(this.inventory[slot][i].id);
+                if (!existingFound) continue;
+                const existingRarityIndex = RARITY_ORDER.indexOf(existingFound.def.rarity);
+                if (newRarityIndex < existingRarityIndex) {
+                    insertIndex = i;
+                    break;
+                }
+            }
+            this.inventory[slot].splice(insertIndex, 0, { id: itemId, count: 1 });
+            return true;
+        }
+
+        // 장비: 기존 방식 (개별 저장)
         if (this.inventory[slot].length >= this.maxInventoryPerSlot) {
             return false;
         }
@@ -624,6 +702,18 @@ class Player {
             }
         } else {
             this.animFrame = 0;
+        }
+
+        // Idle 애니메이션 업데이트
+        if (Math.abs(this.velX) <= 0.5 && !this.attacking && !this.climbing) {
+            this.idleTimer++;
+            if (this.idleTimer > 10) {
+                this.idleTimer = 0;
+                this.idleFrame = (this.idleFrame + 1) % 6;
+            }
+        } else {
+            this.idleFrame = 0;
+            this.idleTimer = 0;
         }
 
         // 공격 타이머
@@ -874,58 +964,76 @@ class Player {
         //     return;
         // }
 
-        ctx.save();
-        ctx.translate(this.x + this.width / 2, this.y);
-        ctx.scale(this.direction, 1);
-        ctx.translate(-this.width / 2, 0);
-
-        // 몸통
-        ctx.fillStyle = '#4a90d9';
-        ctx.fillRect(4, 16, 24, 24);
-
-        // 머리
-        ctx.fillStyle = '#ffdbac';
-        ctx.beginPath();
-        ctx.arc(16, 12, 12, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 머리카락
-        ctx.fillStyle = '#4a3728';
-        ctx.beginPath();
-        ctx.arc(16, 8, 10, Math.PI, Math.PI * 2);
-        ctx.fill();
-        ctx.fillRect(6, 4, 20, 6);
-
-        // 눈
-        ctx.fillStyle = '#000';
-        ctx.fillRect(12, 10, 3, 4);
-        ctx.fillRect(18, 10, 3, 4);
-
-        // 팔 (공격 시 앞으로)
-        ctx.fillStyle = '#ffdbac';
-        if (this.attacking) {
-            ctx.fillRect(24, 20, 20, 8);
-            // 검
-            ctx.fillStyle = '#888';
-            ctx.fillRect(40, 10, 6, 30);
-            ctx.fillStyle = '#ff0';
-            ctx.fillRect(40, 8, 6, 4);
+        // Idle 스프라이트가 있고, idle 상태일 때 스프라이트 사용
+        const isIdle = Math.abs(this.velX) <= 0.5 && !this.attacking && !this.climbing;
+        if (isIdle && this.spritesLoaded.idle) {
+            ctx.save();
+            const sprite = this.sprites.idle[this.idleFrame];
+            const spriteRatio = sprite.width / sprite.height;
+            const drawH = this.height * 2;
+            const drawW = drawH * spriteRatio;
+            const drawX = this.x + this.width / 2 - drawW / 2;
+            const drawY = this.y + this.height - drawH; // 발 기준 정렬
+            ctx.translate(drawX + drawW / 2, drawY);
+            ctx.scale(this.direction, 1);
+            ctx.translate(-drawW / 2, 0);
+            ctx.drawImage(sprite, 0, 0, drawW, drawH);
+            ctx.restore();
         } else {
-            ctx.fillRect(24, 22, 8, 6);
-        }
+            // 기본 캔버스 그림 (스프라이트 없을 때 폴백)
+            ctx.save();
+            ctx.translate(this.x + this.width / 2, this.y);
+            ctx.scale(this.direction, 1);
+            ctx.translate(-this.width / 2, 0);
 
-        // 다리
-        ctx.fillStyle = '#3a3a3a';
-        const legOffset = Math.sin(this.animFrame * Math.PI / 2) * 4;
-        if (this.grounded && Math.abs(this.velX) > 0.5) {
-            ctx.fillRect(6, 40, 8, 10 + legOffset);
-            ctx.fillRect(18, 40, 8, 10 - legOffset);
-        } else {
-            ctx.fillRect(6, 40, 8, 10);
-            ctx.fillRect(18, 40, 8, 10);
-        }
+            // 몸통
+            ctx.fillStyle = '#4a90d9';
+            ctx.fillRect(4, 16, 24, 24);
 
-        ctx.restore();
+            // 머리
+            ctx.fillStyle = '#ffdbac';
+            ctx.beginPath();
+            ctx.arc(16, 12, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 머리카락
+            ctx.fillStyle = '#4a3728';
+            ctx.beginPath();
+            ctx.arc(16, 8, 10, Math.PI, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(6, 4, 20, 6);
+
+            // 눈
+            ctx.fillStyle = '#000';
+            ctx.fillRect(12, 10, 3, 4);
+            ctx.fillRect(18, 10, 3, 4);
+
+            // 팔 (공격 시 앞으로)
+            ctx.fillStyle = '#ffdbac';
+            if (this.attacking) {
+                ctx.fillRect(24, 20, 20, 8);
+                // 검
+                ctx.fillStyle = '#888';
+                ctx.fillRect(40, 10, 6, 30);
+                ctx.fillStyle = '#ff0';
+                ctx.fillRect(40, 8, 6, 4);
+            } else {
+                ctx.fillRect(24, 22, 8, 6);
+            }
+
+            // 다리
+            ctx.fillStyle = '#3a3a3a';
+            const legOffset = Math.sin(this.animFrame * Math.PI / 2) * 4;
+            if (this.grounded && Math.abs(this.velX) > 0.5) {
+                ctx.fillRect(6, 40, 8, 10 + legOffset);
+                ctx.fillRect(18, 40, 8, 10 - legOffset);
+            } else {
+                ctx.fillRect(6, 40, 8, 10);
+                ctx.fillRect(18, 40, 8, 10);
+            }
+
+            ctx.restore();
+        }
 
         // 공격 이펙트
         if (this.attacking && this.attackTimer > 5) {
@@ -3495,6 +3603,21 @@ const stages = {    "Stage001": {
     }
 };
 
+// 월드맵 노드/연결 데이터
+const worldMapData = {
+    nodes: [
+        { id: "Lobby", x: 400, y: 380, label: "나뭇잎 마을", reqLevel: 0, color: '#4CAF50', icon: 'town' },
+        { id: "Stage001", x: 400, y: 250, label: "초원 지대", reqLevel: 1, color: '#87CEEB', icon: 'field', monsters: ["슬라임", "버섯"] },
+        { id: "Stage002", x: 250, y: 140, label: "어둠의 동굴", reqLevel: 5, color: '#6a5acd', icon: 'cave', monsters: ["슬라임", "버섯", "유령"] },
+        { id: "Stage003", x: 550, y: 140, label: "버려진 사막", reqLevel: 10, color: '#f4a460', icon: 'desert', monsters: ["슬라임"] },
+    ],
+    edges: [
+        ["Lobby", "Stage001"],
+        ["Stage001", "Stage002"],
+        ["Stage001", "Stage003"],
+    ]
+};
+
 // 현재 스테이지 (파일명으로 관리)
 let currentStage = null;
 let currentStageData = null;
@@ -3528,6 +3651,9 @@ function applyStageData(stage, stageName) {
     const previousStage = currentStage;
     currentStage = stageName;
     currentStageData = stage;
+
+    // 스테이지 해금 처리
+    unlockedStages.add(stageName);
 
     // 플레이어 위치 초기화
     player.x = stage.playerStart.x;
@@ -3679,10 +3805,20 @@ document.addEventListener('keydown', (e) => {
         case 'KeyZ':
         case 'ControlLeft':
         case 'ControlRight':
-            player.attack();
+            if (!e.repeat) player.attack();
+            break;
+        case 'KeyM':
+            if (showWorldMap) {
+                showWorldMap = false;
+            } else {
+                showWorldMap = true;
+                worldMapHoverNode = null;
+            }
             break;
         case 'Escape':
-            if (equipmentPanelOpen) {
+            if (showWorldMap) {
+                showWorldMap = false;
+            } else if (equipmentPanelOpen) {
                 equipmentPanelOpen = false;
                 selectedInventoryIndex = -1;
             }
@@ -3716,14 +3852,29 @@ document.addEventListener('keyup', (e) => {
     }
 });
 
-// 마우스 클릭 이벤트 (장비 UI)
+// 마우스 클릭 이벤트 (장비 UI / 월드맵)
 canvas.addEventListener('click', (e) => {
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
+    if (showWorldMap) {
+        handleWorldMapClick(mouseX, mouseY);
+        return;
+    }
+
     if (equipmentPanelOpen) {
         handleEquipmentPanelClick(mouseX, mouseY);
+        return;
+    }
+
+    // 지도 버튼 클릭
+    if (mouseX >= worldMapButtonBounds.x &&
+        mouseX <= worldMapButtonBounds.x + worldMapButtonBounds.width &&
+        mouseY >= worldMapButtonBounds.y &&
+        mouseY <= worldMapButtonBounds.y + worldMapButtonBounds.height) {
+        showWorldMap = true;
+        worldMapHoverNode = null;
         return;
     }
 
@@ -3734,6 +3885,15 @@ canvas.addEventListener('click', (e) => {
         mouseY <= equipmentButtonBounds.y + equipmentButtonBounds.height) {
         equipmentPanelOpen = true;
     }
+});
+
+// 마우스 무브 이벤트 (월드맵 호버)
+canvas.addEventListener('mousemove', (e) => {
+    if (!showWorldMap) return;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    handleWorldMapMouseMove(mouseX, mouseY);
 });
 
 // 마우스 휠로 인벤토리 스크롤
@@ -3771,8 +3931,12 @@ function handleEquipmentPanelClick(mouseX, mouseY) {
 
     // 상세 정보창이 열려있을 때
     if (viewingEquipmentId) {
+        const found = findDefinition(viewingEquipmentId);
+        const category = found ? found.category : null;
+        const isStackCategory = (category === 'material' || category === 'item');
+
         const detailW = 220;
-        const detailH = 200;
+        const detailH = isStackCategory && !viewingEquipmentSlot ? 240 : 200;
         const detailX = canvas.width / 2 - detailW / 2;
         const detailY = canvas.height / 2 - detailH / 2;
 
@@ -3786,17 +3950,13 @@ function handleEquipmentPanelClick(mouseX, mouseY) {
 
         // 장착/해제 버튼 (장비만)
         const btnY = detailY + detailH - 40;
-        const found = findDefinition(viewingEquipmentId);
-        const category = found ? found.category : null;
 
         if (category === 'equipment' &&
             mouseX >= detailX + 20 && mouseX <= detailX + 100 &&
             mouseY >= btnY && mouseY <= btnY + 30) {
             if (viewingEquipmentSlot) {
-                // 장착 슬롯에서 봤으면 해제
                 player.unequipItem(viewingEquipmentSlot);
             } else {
-                // 인벤토리에서 봤으면 장착
                 player.equipItem(viewingEquipmentId);
             }
             viewingEquipmentId = null;
@@ -3804,34 +3964,89 @@ function handleEquipmentPanelClick(mouseX, mouseY) {
             return;
         }
 
+        // 재료/아이템 수량 조절 버튼
+        if (isStackCategory && !viewingEquipmentSlot) {
+            const qtyY = btnY - 35;
+            const slot = category === 'material' ? 'material' : 'item';
+            const stack = player.inventory[slot].find(s => s.id === viewingEquipmentId);
+            const maxCount = stack ? stack.count : 0;
+
+            // [-] 버튼
+            if (mouseX >= detailX + 20 && mouseX <= detailX + 48 &&
+                mouseY >= qtyY + 5 && mouseY <= qtyY + 27) {
+                if (sellQuantity > 1) sellQuantity--;
+                return;
+            }
+            // [+] 버튼
+            if (mouseX >= detailX + 152 && mouseX <= detailX + 180 &&
+                mouseY >= qtyY + 5 && mouseY <= qtyY + 27) {
+                if (sellQuantity < maxCount) sellQuantity++;
+                return;
+            }
+            // [MAX] 버튼
+            if (mouseX >= detailX + 185 && mouseX <= detailX + 201 &&
+                mouseY >= qtyY + 5 && mouseY <= qtyY + 27) {
+                sellQuantity = maxCount;
+                return;
+            }
+        }
+
         // 판매 버튼 (장착중이 아닌 경우에만)
         if (!viewingEquipmentSlot && found) {
-            const sellBtnX = category === 'equipment' ? detailX + 110 : detailX + 20;
-            if (mouseX >= sellBtnX && mouseX <= sellBtnX + 90 &&
-                mouseY >= btnY && mouseY <= btnY + 30) {
-                // 인벤토리 슬롯 결정
-                let slot;
-                if (category === 'equipment') {
-                    slot = found.def.type;
-                } else if (category === 'material') {
-                    slot = 'material';
-                } else if (category === 'item') {
-                    slot = 'item';
+            if (isStackCategory) {
+                // 재료/아이템: 넓은 판매 버튼
+                if (mouseX >= detailX + 20 && mouseX <= detailX + 200 &&
+                    mouseY >= btnY && mouseY <= btnY + 30) {
+                    const slot = category === 'material' ? 'material' : 'item';
+                    const sellValue = found.def.returnGoldValue || 0;
+                    let totalGold = 0;
+                    let soldCount = 0;
+                    for (let i = 0; i < sellQuantity; i++) {
+                        const result = player.sellItem(viewingEquipmentId, slot);
+                        if (result.success) {
+                            totalGold += result.gold;
+                            soldCount++;
+                        } else break;
+                    }
+                    if (soldCount > 0) {
+                        uiNotifications.push(new UINotification(
+                            canvas.width / 2,
+                            canvas.height / 2 - 20,
+                            `${soldCount}개 판매 완료! +${totalGold}G`,
+                            '#FFD700',
+                            60
+                        ));
+                    }
+                    // 남은 수량 확인
+                    const remaining = player.inventory[slot].find(s => s.id === viewingEquipmentId);
+                    if (!remaining) {
+                        viewingEquipmentId = null;
+                        viewingEquipmentSlot = null;
+                    } else {
+                        if (sellQuantity > remaining.count) sellQuantity = remaining.count;
+                    }
+                    return;
                 }
-
-                const result = player.sellItem(viewingEquipmentId, slot);
-                if (result.success) {
-                    uiNotifications.push(new UINotification(
-                        canvas.width / 2,
-                        canvas.height / 2 - 20,
-                        `판매 완료! +${result.gold}G`,
-                        '#FFD700',
-                        45
-                    ));
+            } else {
+                // 장비: 기존 판매 버튼
+                const sellBtnX = detailX + 110;
+                if (mouseX >= sellBtnX && mouseX <= sellBtnX + 90 &&
+                    mouseY >= btnY && mouseY <= btnY + 30) {
+                    const slot = found.def.type;
+                    const result = player.sellItem(viewingEquipmentId, slot);
+                    if (result.success) {
+                        uiNotifications.push(new UINotification(
+                            canvas.width / 2,
+                            canvas.height / 2 - 20,
+                            `판매 완료! +${result.gold}G`,
+                            '#FFD700',
+                            45
+                        ));
+                    }
+                    viewingEquipmentId = null;
+                    viewingEquipmentSlot = null;
+                    return;
                 }
-                viewingEquipmentId = null;
-                viewingEquipmentSlot = null;
-                return;
             }
         }
 
@@ -3912,14 +4127,21 @@ function handleEquipmentPanelClick(mouseX, mouseY) {
     // 현재 탭의 인벤토리
     const currentTabInventory = player.inventory[selectedEquipmentTab];
     const equippedItemId = player.equipment[selectedEquipmentTab];
+    const isStackTab = (selectedEquipmentTab === 'material' || selectedEquipmentTab === 'item');
 
     // 표시할 아이템 목록 (장착중인 아이템을 맨 앞에)
     const displayItems = [];
     if (equippedItemId) {
-        displayItems.push({ id: equippedItemId, equipped: true });
+        displayItems.push({ id: equippedItemId, equipped: true, count: 1 });
     }
-    for (const itemId of currentTabInventory) {
-        displayItems.push({ id: itemId, equipped: false });
+    if (isStackTab) {
+        for (const stack of currentTabInventory) {
+            displayItems.push({ id: stack.id, equipped: false, count: stack.count });
+        }
+    } else {
+        for (const itemId of currentTabInventory) {
+            displayItems.push({ id: itemId, equipped: false, count: 1 });
+        }
     }
 
     // 인벤토리 영역
@@ -3975,6 +4197,7 @@ function handleEquipmentPanelClick(mouseX, mouseY) {
                 // 장비 상세 정보 보기
                 viewingEquipmentId = displayItems[actualIndex].id;
                 viewingEquipmentSlot = displayItems[actualIndex].equipped ? selectedEquipmentTab : null;
+                sellQuantity = 1;
             }
             return;
         }
@@ -4353,8 +4576,84 @@ function drawUI() {
         );
     });
 
-    // 장비 버튼 (가방 아이콘) - 맵 이름 왼편
+    // 지도 버튼 - 가방 버튼 왼편
     const btnSize = 36;
+    const mapBtnX = canvas.width - 180 - btnSize * 2 - 20;
+    const mapBtnY = 7;
+
+    worldMapButtonBounds = { x: mapBtnX, y: mapBtnY, width: btnSize, height: btnSize };
+
+    // 지도 버튼 배경 (원형)
+    ctx.beginPath();
+    ctx.arc(mapBtnX + btnSize / 2, mapBtnY + btnSize / 2, btnSize / 2, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(60, 80, 60, 0.9)';
+    ctx.fill();
+    ctx.strokeStyle = '#88AA66';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // 지도 아이콘 그리기
+    const mapIconX = mapBtnX + btnSize / 2;
+    const mapIconY = mapBtnY + btnSize / 2;
+
+    ctx.save();
+    ctx.translate(mapIconX, mapIconY);
+
+    // 접힌 지도 본체
+    ctx.fillStyle = '#DEB887';
+    ctx.beginPath();
+    ctx.moveTo(-11, -8);
+    ctx.lineTo(-4, -10);
+    ctx.lineTo(4, -8);
+    ctx.lineTo(11, -10);
+    ctx.lineTo(11, 10);
+    ctx.lineTo(4, 8);
+    ctx.lineTo(-4, 10);
+    ctx.lineTo(-11, 8);
+    ctx.closePath();
+    ctx.fill();
+
+    // 접힌 선
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-4, -10);
+    ctx.lineTo(-4, 10);
+    ctx.moveTo(4, -8);
+    ctx.lineTo(4, 8);
+    ctx.stroke();
+
+    // 지도 위 경로 표시 (X 마크)
+    ctx.strokeStyle = '#CC3333';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-2, -2);
+    ctx.lineTo(2, 2);
+    ctx.moveTo(2, -2);
+    ctx.lineTo(-2, 2);
+    ctx.stroke();
+
+    // 점선 경로
+    ctx.strokeStyle = '#666';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(-8, 4);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(7, -4);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.restore();
+
+    // 지도 텍스트
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 10px MaplestoryOTFBold';
+    ctx.textAlign = 'center';
+    ctx.fillText('지도', mapBtnX + btnSize / 2, mapBtnY + btnSize + 12);
+    ctx.textAlign = 'left';
+
+    // 장비 버튼 (가방 아이콘) - 지도 버튼 오른편
     const btnX = canvas.width - 180 - btnSize - 10;
     const btnY = 7;
 
@@ -4625,14 +4924,21 @@ function drawEquipmentPanel() {
     const currentTabInventory = player.inventory[selectedEquipmentTab];
     // 현재 탭에 장착중인 장비
     const equippedItemId = player.equipment[selectedEquipmentTab];
+    const isStackTab = (selectedEquipmentTab === 'material' || selectedEquipmentTab === 'item');
 
     // 표시할 아이템 목록 생성 (장착중인 아이템을 맨 앞에)
     const displayItems = [];
     if (equippedItemId) {
-        displayItems.push({ id: equippedItemId, equipped: true });
+        displayItems.push({ id: equippedItemId, equipped: true, count: 1 });
     }
-    for (const itemId of currentTabInventory) {
-        displayItems.push({ id: itemId, equipped: false });
+    if (isStackTab) {
+        for (const stack of currentTabInventory) {
+            displayItems.push({ id: stack.id, equipped: false, count: stack.count });
+        }
+    } else {
+        for (const itemId of currentTabInventory) {
+            displayItems.push({ id: itemId, equipped: false, count: 1 });
+        }
     }
 
     // 인벤토리 (우측)
@@ -4689,6 +4995,16 @@ function drawEquipmentPanel() {
                 ctx.font = 'bold 10px MaplestoryOTFBold';
                 ctx.textAlign = 'left';
                 ctx.fillText(def.rarity, itemX + 3, itemY + 11);
+
+                // 스택 수량 표시 (재료/아이템)
+                if (item.count > 1) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                    ctx.fillRect(itemX, itemY + invSlotSize - 14, invSlotSize, 14);
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 10px MaplestoryOTFBold';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(item.count, itemX + invSlotSize - 3, itemY + invSlotSize - 3);
+                }
 
                 // 장착중 표시
                 if (item.equipped) {
@@ -4766,7 +5082,8 @@ function drawEquipmentDetail() {
     const category = found.category;
 
     const detailW = 220;
-    const detailH = 200;
+    const isStackCategory = (category === 'material' || category === 'item');
+    const detailH = isStackCategory && !viewingEquipmentSlot ? 240 : 200;
     const detailX = canvas.width / 2 - detailW / 2;
     const detailY = canvas.height / 2 - detailH / 2;
 
@@ -4848,7 +5165,9 @@ function drawEquipmentDetail() {
             ctx.fillText(def.description, detailX + 20, statY);
             statY += 20;
         }
-        ctx.fillText(`최대 보유: ${def.stackMax}`, detailX + 20, statY);
+        const matStack = player.inventory.material.find(s => s.id === viewingEquipmentId);
+        const matCount = matStack ? matStack.count : 0;
+        ctx.fillText(`보유: ${matCount} / ${def.stackMax}`, detailX + 20, statY);
     } else if (category === 'item') {
         if (def.description) {
             ctx.fillText(def.description, detailX + 20, statY);
@@ -4858,7 +5177,9 @@ function drawEquipmentDetail() {
             ctx.fillText(`효과: ${def.effect} (${def.value})`, detailX + 20, statY);
             statY += 20;
         }
-        ctx.fillText(`최대 보유: ${def.stackMax}`, detailX + 20, statY);
+        const itemStack = player.inventory.item.find(s => s.id === viewingEquipmentId);
+        const itemCount = itemStack ? itemStack.count : 0;
+        ctx.fillText(`보유: ${itemCount} / ${def.stackMax}`, detailX + 20, statY);
     }
 
     // 버튼 영역
@@ -4883,22 +5204,473 @@ function drawEquipmentDetail() {
 
     // 판매 버튼 (장착중이 아닌 경우에만)
     if (!viewingEquipmentSlot) {
-        const sellBtnX = category === 'equipment' ? detailX + 110 : detailX + 20;
         const sellValue = def.returnGoldValue || 0;
 
-        ctx.fillStyle = '#DAA520';
-        ctx.fillRect(sellBtnX, btnY, 90, 30);
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(sellBtnX, btnY, 90, 30);
+        if (isStackCategory) {
+            // 재료/아이템: 수량 조절 UI
+            const slot = category === 'material' ? 'material' : 'item';
+            const stack = player.inventory[slot].find(s => s.id === viewingEquipmentId);
+            const maxCount = stack ? stack.count : 0;
 
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 12px MaplestoryOTFBold';
-        ctx.textAlign = 'center';
-        ctx.fillText(`판매 ${sellValue}G`, sellBtnX + 45, btnY + 20);
+            // sellQuantity 범위 보정
+            if (sellQuantity > maxCount) sellQuantity = maxCount;
+            if (sellQuantity < 1) sellQuantity = 1;
+
+            const qtyY = btnY - 35;
+
+            // 수량 조절 라벨
+            ctx.fillStyle = '#AAAAAA';
+            ctx.font = '11px MaplestoryOTFBold';
+            ctx.textAlign = 'left';
+            ctx.fillText('판매 수량:', detailX + 20, qtyY);
+
+            // [-] 버튼
+            ctx.fillStyle = sellQuantity > 1 ? '#666688' : '#444455';
+            ctx.fillRect(detailX + 20, qtyY + 5, 28, 22);
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(detailX + 20, qtyY + 5, 28, 22);
+            ctx.fillStyle = sellQuantity > 1 ? '#FFF' : '#666';
+            ctx.font = 'bold 14px MaplestoryOTFBold';
+            ctx.textAlign = 'center';
+            ctx.fillText('-', detailX + 34, qtyY + 21);
+
+            // 수량 표시
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 14px MaplestoryOTFBold';
+            ctx.fillText(sellQuantity, detailX + 110, qtyY + 21);
+
+            // [+] 버튼
+            ctx.fillStyle = sellQuantity < maxCount ? '#666688' : '#444455';
+            ctx.fillRect(detailX + 152, qtyY + 5, 28, 22);
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(detailX + 152, qtyY + 5, 28, 22);
+            ctx.fillStyle = sellQuantity < maxCount ? '#FFF' : '#666';
+            ctx.font = 'bold 14px MaplestoryOTFBold';
+            ctx.textAlign = 'center';
+            ctx.fillText('+', detailX + 166, qtyY + 21);
+
+            // [MAX] 버튼
+            ctx.fillStyle = '#555577';
+            ctx.fillRect(detailX + 185, qtyY + 5, 16, 22);
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(detailX + 185, qtyY + 5, 16, 22);
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 8px MaplestoryOTFBold';
+            ctx.textAlign = 'center';
+            ctx.fillText('M', detailX + 193, qtyY + 19);
+
+            // 판매 버튼 (총 금액 표시)
+            const totalGold = sellValue * sellQuantity;
+            ctx.fillStyle = '#DAA520';
+            ctx.fillRect(detailX + 20, btnY, 180, 30);
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(detailX + 20, btnY, 180, 30);
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 12px MaplestoryOTFBold';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${sellQuantity}개 판매 (${totalGold}G)`, detailX + 110, btnY + 20);
+        } else {
+            // 장비: 기존 판매 버튼
+            const sellBtnX = category === 'equipment' ? detailX + 110 : detailX + 20;
+
+            ctx.fillStyle = '#DAA520';
+            ctx.fillRect(sellBtnX, btnY, 90, 30);
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(sellBtnX, btnY, 90, 30);
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 12px MaplestoryOTFBold';
+            ctx.textAlign = 'center';
+            ctx.fillText(`판매 ${sellValue}G`, sellBtnX + 45, btnY + 20);
+        }
     }
 
     ctx.textAlign = 'left';
+}
+
+// ===== 월드맵 시스템 =====
+
+function drawWorldMap() {
+    worldMapAnimTimer++;
+
+    // 반투명 배경
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 패널 크기/위치
+    const panelW = 800;
+    const panelH = 480;
+    const panelX = canvas.width / 2 - panelW / 2;
+    const panelY = canvas.height / 2 - panelH / 2;
+
+    // 패널 배경 (양피지 느낌)
+    const bgGrad = ctx.createLinearGradient(panelX, panelY, panelX, panelY + panelH);
+    bgGrad.addColorStop(0, '#3d2b1f');
+    bgGrad.addColorStop(0.5, '#2a1a0a');
+    bgGrad.addColorStop(1, '#3d2b1f');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(panelX, panelY, panelW, panelH);
+
+    // 패널 테두리
+    ctx.strokeStyle = '#c8a870';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(panelX, panelY, panelW, panelH);
+
+    // 안쪽 장식 테두리
+    ctx.strokeStyle = 'rgba(200, 168, 112, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(panelX + 8, panelY + 8, panelW - 16, panelH - 16);
+
+    // 제목
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 22px MaplestoryOTFBold';
+    ctx.textAlign = 'center';
+    ctx.fillText('월드맵', canvas.width / 2, panelY + 35);
+
+    // 닫기 버튼 (X)
+    const closeBtnX = panelX + panelW - 35;
+    const closeBtnY = panelY + 10;
+    ctx.fillStyle = '#aa3333';
+    ctx.fillRect(closeBtnX, closeBtnY, 25, 25);
+    ctx.strokeStyle = '#ff6666';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(closeBtnX, closeBtnY, 25, 25);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 16px MaplestoryOTFBold';
+    ctx.textAlign = 'center';
+    ctx.fillText('X', closeBtnX + 12.5, closeBtnY + 18);
+
+
+    // 맵 영역 오프셋 (패널 내부 좌표 → 캔버스 좌표)
+    const mapOffsetX = panelX + (panelW - 800) / 2;
+    const mapOffsetY = panelY + 30;
+
+    const nodes = worldMapData.nodes;
+    const edges = worldMapData.edges;
+
+    // 연결선 그리기
+    edges.forEach(([fromId, toId]) => {
+        const fromNode = nodes.find(n => n.id === fromId);
+        const toNode = nodes.find(n => n.id === toId);
+        if (!fromNode || !toNode) return;
+
+        const fx = mapOffsetX + fromNode.x;
+        const fy = mapOffsetY + fromNode.y;
+        const tx = mapOffsetX + toNode.x;
+        const ty = mapOffsetY + toNode.y;
+
+        const bothUnlocked = unlockedStages.has(fromId) && unlockedStages.has(toId);
+
+        if (bothUnlocked) {
+            ctx.strokeStyle = '#c8a870';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+        } else {
+            ctx.strokeStyle = 'rgba(150, 150, 150, 0.4)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    });
+
+    // 노드 그리기
+    nodes.forEach(node => {
+        const nx = mapOffsetX + node.x;
+        const ny = mapOffsetY + node.y;
+        const radius = 28;
+        const isUnlocked = unlockedStages.has(node.id);
+        const isCurrent = currentStage === node.id;
+        const isHover = worldMapHoverNode === node.id;
+
+        // 현재 위치 깜빡임 효과
+        if (isCurrent) {
+            const pulse = Math.sin(worldMapAnimTimer * 0.08) * 0.3 + 0.7;
+            ctx.beginPath();
+            ctx.arc(nx, ny, radius + 8, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 255, 100, ${pulse * 0.3})`;
+            ctx.fill();
+            ctx.strokeStyle = `rgba(0, 255, 100, ${pulse})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // 호버 효과
+        if (isHover && isUnlocked) {
+            ctx.beginPath();
+            ctx.arc(nx, ny, radius + 5, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
+            ctx.fill();
+        }
+
+        // 노드 원형 배경
+        ctx.beginPath();
+        ctx.arc(nx, ny, radius, 0, Math.PI * 2);
+        if (isUnlocked) {
+            const nodeGrad = ctx.createRadialGradient(nx - 5, ny - 5, 2, nx, ny, radius);
+            nodeGrad.addColorStop(0, lightenColor(node.color, 40));
+            nodeGrad.addColorStop(1, node.color);
+            ctx.fillStyle = nodeGrad;
+        } else {
+            ctx.fillStyle = '#555';
+        }
+        ctx.fill();
+
+        // 노드 테두리
+        ctx.strokeStyle = isUnlocked ? '#fff' : '#777';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 노드 아이콘
+        drawWorldMapIcon(ctx, nx, ny, node.icon, isUnlocked);
+
+        // 잠금 아이콘
+        if (!isUnlocked) {
+            drawLockIcon(ctx, nx, ny);
+        }
+
+        // 스테이지 이름 라벨
+        ctx.fillStyle = isUnlocked ? '#fff' : '#888';
+        ctx.font = 'bold 13px MaplestoryOTFBold';
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.strokeText(node.label, nx, ny + radius + 18);
+        ctx.fillText(node.label, nx, ny + radius + 18);
+
+        // 권장 레벨 표시
+        if (node.reqLevel > 0) {
+            ctx.fillStyle = isUnlocked ? '#aaa' : '#666';
+            ctx.font = '10px MaplestoryOTFBold';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeText(`Lv.${node.reqLevel}+`, nx, ny + radius + 32);
+            ctx.fillText(`Lv.${node.reqLevel}+`, nx, ny + radius + 32);
+        }
+    });
+
+    // 호버 툴팁
+    if (worldMapHoverNode) {
+        const node = nodes.find(n => n.id === worldMapHoverNode);
+        if (node) {
+            drawWorldMapTooltip(ctx, mapOffsetX + node.x, mapOffsetY + node.y, node);
+        }
+    }
+
+    ctx.textAlign = 'left';
+}
+
+// 월드맵 아이콘 그리기
+function drawWorldMapIcon(ctx, cx, cy, icon, unlocked) {
+    ctx.save();
+    ctx.fillStyle = unlocked ? '#fff' : '#999';
+    ctx.strokeStyle = unlocked ? '#fff' : '#999';
+    ctx.lineWidth = 1.5;
+
+    if (icon === 'town') {
+        // 집 아이콘
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 12);
+        ctx.lineTo(cx + 10, cy - 2);
+        ctx.lineTo(cx + 7, cy - 2);
+        ctx.lineTo(cx + 7, cy + 8);
+        ctx.lineTo(cx - 7, cy + 8);
+        ctx.lineTo(cx - 7, cy - 2);
+        ctx.lineTo(cx - 10, cy - 2);
+        ctx.closePath();
+        ctx.fill();
+    } else if (icon === 'field') {
+        // 나무 아이콘
+        ctx.beginPath();
+        ctx.arc(cx, cy - 6, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(cx - 2, cy + 2, 4, 8);
+    } else if (icon === 'cave') {
+        // 동굴 아이콘
+        ctx.beginPath();
+        ctx.arc(cx, cy, 10, Math.PI, 0);
+        ctx.lineTo(cx + 10, cy + 6);
+        ctx.lineTo(cx - 10, cy + 6);
+        ctx.closePath();
+        ctx.fill();
+        // 입구
+        ctx.fillStyle = unlocked ? '#333' : '#666';
+        ctx.beginPath();
+        ctx.arc(cx, cy + 2, 5, Math.PI, 0);
+        ctx.lineTo(cx + 5, cy + 6);
+        ctx.lineTo(cx - 5, cy + 6);
+        ctx.closePath();
+        ctx.fill();
+    } else if (icon === 'desert') {
+        // 선인장 아이콘
+        ctx.fillRect(cx - 2, cy - 8, 4, 16);
+        ctx.fillRect(cx + 2, cy - 4, 6, 3);
+        ctx.fillRect(cx + 5, cy - 4, 3, -6);
+        ctx.fillRect(cx - 8, cy, 6, 3);
+        ctx.fillRect(cx - 8, cy, 3, -5);
+    }
+    ctx.restore();
+}
+
+// 자물쇠 아이콘
+function drawLockIcon(ctx, cx, cy) {
+    ctx.save();
+    ctx.fillStyle = '#aaa';
+    ctx.strokeStyle = '#aaa';
+    ctx.lineWidth = 2;
+    // 자물쇠 고리
+    ctx.beginPath();
+    ctx.arc(cx, cy - 4, 5, Math.PI, 0);
+    ctx.stroke();
+    // 자물쇠 몸체
+    ctx.fillRect(cx - 6, cy - 1, 12, 10);
+    // 열쇠 구멍
+    ctx.fillStyle = '#555';
+    ctx.beginPath();
+    ctx.arc(cx, cy + 3, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+}
+
+// 색상 밝게 하기 헬퍼
+function lightenColor(hex, amount) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.min(255, (num >> 16) + amount);
+    const g = Math.min(255, ((num >> 8) & 0xFF) + amount);
+    const b = Math.min(255, (num & 0xFF) + amount);
+    return `rgb(${r},${g},${b})`;
+}
+
+// 월드맵 툴팁
+function drawWorldMapTooltip(ctx, nx, ny, node) {
+    const tooltipW = 160;
+    const hasMonsters = node.monsters && node.monsters.length > 0;
+    const tooltipH = hasMonsters ? 80 : 50;
+    let tx = nx + 40;
+    let ty = ny - tooltipH / 2;
+
+    // 화면 밖으로 나가지 않도록 보정
+    if (tx + tooltipW > canvas.width - 20) tx = nx - tooltipW - 40;
+    if (ty < 40) ty = 40;
+    if (ty + tooltipH > canvas.height - 20) ty = canvas.height - 20 - tooltipH;
+
+    // 배경
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+    ctx.fillRect(tx, ty, tooltipW, tooltipH);
+    ctx.strokeStyle = '#c8a870';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(tx, ty, tooltipW, tooltipH);
+
+    // 텍스트
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 13px MaplestoryOTFBold';
+    ctx.fillText(node.label, tx + 10, ty + 20);
+
+    ctx.fillStyle = '#ccc';
+    ctx.font = '11px MaplestoryOTFBold';
+    if (node.reqLevel > 0) {
+        ctx.fillText(`권장 레벨: ${node.reqLevel}+`, tx + 10, ty + 38);
+    } else {
+        ctx.fillText('안전 지대', tx + 10, ty + 38);
+    }
+
+    if (hasMonsters) {
+        ctx.fillStyle = '#ff9999';
+        ctx.fillText(`몬스터: ${node.monsters.join(', ')}`, tx + 10, ty + 56);
+    }
+
+    // 해금 상태이면 클릭 안내
+    if (unlockedStages.has(node.id) && node.id !== currentStage) {
+        ctx.fillStyle = '#88ff88';
+        ctx.font = '10px MaplestoryOTFBold';
+        ctx.fillText('클릭하여 이동', tx + 10, ty + tooltipH - 8);
+    }
+}
+
+// 월드맵 클릭 처리
+function handleWorldMapClick(mouseX, mouseY) {
+    const panelW = 800;
+    const panelH = 480;
+    const panelX = canvas.width / 2 - panelW / 2;
+    const panelY = canvas.height / 2 - panelH / 2;
+
+    // 닫기 버튼
+    const closeBtnX = panelX + panelW - 35;
+    const closeBtnY = panelY + 10;
+    if (mouseX >= closeBtnX && mouseX <= closeBtnX + 25 &&
+        mouseY >= closeBtnY && mouseY <= closeBtnY + 25) {
+        showWorldMap = false;
+        return;
+    }
+
+    // 패널 바깥 클릭 시 닫기
+    if (mouseX < panelX || mouseX > panelX + panelW ||
+        mouseY < panelY || mouseY > panelY + panelH) {
+        showWorldMap = false;
+        return;
+    }
+
+    // 노드 클릭
+    const mapOffsetX = panelX + (panelW - 800) / 2;
+    const mapOffsetY = panelY + 30;
+
+    for (const node of worldMapData.nodes) {
+        const nx = mapOffsetX + node.x;
+        const ny = mapOffsetY + node.y;
+        const dist = Math.sqrt((mouseX - nx) ** 2 + (mouseY - ny) ** 2);
+
+        if (dist <= 28) {
+            if (!unlockedStages.has(node.id)) {
+                uiNotifications.push(new UINotification(
+                    canvas.width / 2, canvas.height / 2 - 50,
+                    '아직 해금되지 않은 지역입니다!', '#ff6666', 90
+                ));
+                return;
+            }
+            if (node.id === currentStage) return;
+
+            // 워프 실행
+            showWorldMap = false;
+            loadStage(node.id);
+            uiNotifications.push(new UINotification(
+                canvas.width / 2, canvas.height - 80,
+                `${node.label}(으)로 이동!`, '#88ff88', 90
+            ));
+            return;
+        }
+    }
+}
+
+// 월드맵 마우스 무브 처리
+function handleWorldMapMouseMove(mouseX, mouseY) {
+    const panelW = 800;
+    const panelH = 480;
+    const panelX = canvas.width / 2 - panelW / 2;
+    const panelY = canvas.height / 2 - panelH / 2;
+    const mapOffsetX = panelX + (panelW - 800) / 2;
+    const mapOffsetY = panelY + 30;
+
+    worldMapHoverNode = null;
+    for (const node of worldMapData.nodes) {
+        const nx = mapOffsetX + node.x;
+        const ny = mapOffsetY + node.y;
+        const dist = Math.sqrt((mouseX - nx) ** 2 + (mouseY - ny) ** 2);
+        if (dist <= 28) {
+            worldMapHoverNode = node.id;
+            break;
+        }
+    }
 }
 
 // 장비 아이콘 그리기 함수
@@ -5294,6 +6066,11 @@ function gameLoop() {
 
     // UI 그리기 (화면 고정)
     drawUI();
+
+    // 월드맵 오버레이
+    if (showWorldMap) {
+        drawWorldMap();
+    }
 
     // UI 알림 업데이트 및 그리기
     for (let i = uiNotifications.length - 1; i >= 0; i--) {
