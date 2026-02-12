@@ -2213,8 +2213,81 @@
             ctx.restore();
         }
 
+        // Stage Connector에서 열렸을 때 자동 로드
+        function loadFromConnector() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('from') !== 'connector') return false;
+
+            const stageId = localStorage.getItem('stageConnector_editStageId');
+            const dataStr = localStorage.getItem('stageConnector_editStageData');
+            if (!stageId || !dataStr) return false;
+
+            try {
+                const data = JSON.parse(dataStr);
+                const defaultBg = {
+                    skyTop: '#87CEEB', skyBottom: '#E0F6FF',
+                    mountains: [
+                        { x1: 0, peak: 150, x2: 300, color: '#9DC183' },
+                        { x1: 200, peak: 200, x2: 600, color: '#7CAF6B' },
+                        { x1: 500, peak: 120, x2: 900, color: '#9DC183' },
+                        { x1: 800, peak: 180, x2: 1200, color: '#7CAF6B' }
+                    ]
+                };
+                stageData = {
+                    number: data.number || 0,
+                    displayName: data.displayName || "",
+                    playerStart: data.playerStart || { x: 100, y: 500 },
+                    platforms: data.platforms || [],
+                    monsters: data.monsters || [],
+                    items: data.items || [],
+                    portals: data.portals || [],
+                    spawners: data.spawners || [],
+                    ladders: data.ladders || [],
+                    background: data.background || defaultBg
+                };
+                document.getElementById('stageName').value = stageId;
+                document.getElementById('stageDisplayName').value = stageData.displayName;
+                updateBgUI();
+                selectedObject = null;
+                updateJSON();
+                updatePropertyPanel();
+                render();
+
+                // 제목에 스테이지 이름 표시
+                document.title = `Level Editor - ${stageId} (${stageData.displayName})`;
+
+                return true;
+            } catch (err) {
+                console.warn('Connector 데이터 로드 실패:', err);
+                return false;
+            }
+        }
+
+        // Connector에서 열렸을 때: 저장 시 결과를 Connector로 전달
+        function sendBackToConnector() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('from') !== 'connector') return;
+
+            const stageId = localStorage.getItem('stageConnector_editStageId');
+            if (!stageId) return;
+
+            updateJSON();
+            localStorage.setItem('stageConnector_editResult', JSON.stringify({
+                id: stageId,
+                data: stageData
+            }));
+        }
+
+        // 기존 saveJSON을 감싸서 Connector 연동 추가
+        const _origSaveJSON = saveJSON;
+        saveJSON = async function() {
+            await _origSaveJSON();
+            sendBackToConnector();
+        };
+
         // 초기화 실행
         init();
+        loadFromConnector();
     </script>
 </body>
 </html>

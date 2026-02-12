@@ -3308,8 +3308,11 @@ const stages = {    "Stage001": {
             { x: 256, y: 256, width: 160, height: 32 }
         ],
         portals: [
-            { x: 1470, y: 340, targetStage: "Stage002" },
-            { x: 288, y: 192, targetStage: "Lobby" }
+            { x: 280, y: 620, targetStage: "Stage002", label: "어둠의 동굴" },
+            { x: 360, y: 620, targetStage: "Stage003", label: "버려진 사막" },
+            { x: 1520, y: 496, targetStage: "Stage000", label: "나뭇잎 마을" },
+            { x: 110, y: 366, targetStage: "Stage004", label: "얼음 절벽" },
+            { x: 1450, y: 596, targetStage: "Stage006", label: "호박 광산" }
         ],
         items: [
             { x: 430, y: 435, type: 'potion' },
@@ -3400,8 +3403,9 @@ const stages = {    "Stage001": {
             { x: 1350, y: 410, width: 200, height: 30 }
         ],
         portals: [
-            { x: 128, y: 320, targetStage: "Stage001" },
-            { x: 1472, y: 338, targetStage: "Stage003" }
+            { x: 200, y: 620, targetStage: "Stage001", label: "초원 지대" },
+            { x: 80, y: 626, targetStage: "Stage000", label: "나뭇잎 마을" },
+            { x: 1520, y: 346, targetStage: "Stage006", label: "호박 광산" }
         ],
         items: [
             { x: 430, y: 455, type: 'potion' },
@@ -3500,7 +3504,9 @@ const stages = {    "Stage001": {
             { x: 1350, y: 410, width: 200, height: 30 }
         ],
         portals: [
-            { x: 96, y: 320, targetStage: "Stage002" }
+            { x: 200, y: 620, targetStage: "Stage001", label: "초원 지대" },
+            { x: 1520, y: 346, targetStage: "Stage000", label: "나뭇잎 마을" },
+            { x: 80, y: 626, targetStage: "Stage005", label: "칠흑 광산" }
         ],
         items: [
             { x: 430, y: 455, type: 'potion' },
@@ -3586,7 +3592,9 @@ const stages = {    "Stage001": {
             { x: 256, y: 626, width: 512, height: 32 }
         ],
         portals: [
-            { x: 512, y: 562, targetStage: "Stage001", label: "초원 지대" }
+            { x: 286, y: 562, targetStage: "Stage003", label: "버려진 사막" },
+            { x: 738, y: 562, targetStage: "Stage002", label: "어둠의 동굴" },
+            { x: 366, y: 562, targetStage: "Stage001", label: "초원 지대" }
         ],
         items: [],
         monsters: [],
@@ -3600,21 +3608,347 @@ const stages = {    "Stage001": {
                 { x1: 600, peak: 180, x2: 900, color: '#8FA88F' }
             ]
         }
+    },
+    "Stage004": {
+        number: 4,
+        displayName: "얼음 절벽",
+        playerStart: { x: 100, y: 710 },
+        platforms: [
+            { x: 100, y: 690, width: 200, height: 30 },
+            { x: 50, y: 590, width: 150, height: 30 },
+            { x: 250, y: 530, width: 180, height: 30 },
+            { x: 80, y: 430, width: 140, height: 30 },
+            { x: 450, y: 660, width: 200, height: 30 },
+            { x: 550, y: 560, width: 150, height: 30 },
+            { x: 400, y: 470, width: 180, height: 30 },
+            { x: 600, y: 390, width: 160, height: 30 },
+            { x: 850, y: 690, width: 200, height: 30 },
+            { x: 1000, y: 610, width: 180, height: 30 },
+            { x: 1150, y: 530, width: 200, height: 30 },
+            { x: 1050, y: 430, width: 150, height: 30 },
+            { x: 1300, y: 660, width: 180, height: 30 },
+            { x: 1400, y: 560, width: 150, height: 30 },
+            { x: 1450, y: 410, width: 130, height: 30 },
+            { x: 256, y: 256, width: 160, height: 32 }
+        ],
+        monsters: [
+            { x: 500, y: 710, type: "slime" },
+            { x: 580, y: 510, type: "mushroom" },
+            { x: 630, y: 340, type: "slime" },
+            { x: 900, y: 710, type: "slime" },
+            { x: 1050, y: 560, type: "mushroom" },
+            { x: 1200, y: 480, type: "mushroom" },
+            { x: 1350, y: 610, type: "slime" },
+            { x: 1470, y: 360, type: "slime" },
+            { x: 300, y: 480, type: "mushroom" },
+            { x: 480, y: 610, type: "mushroom" },
+            { x: 1100, y: 640, type: "mushroom" },
+            { x: 350, y: 710, type: "slime" },
+            { x: 600, y: 710, type: "mushroom" },
+            { x: 750, y: 710, type: "slime" },
+            { x: 1000, y: 710, type: "mushroom" },
+            { x: 1150, y: 710, type: "slime" },
+            { x: 1300, y: 710, type: "mushroom" },
+            { x: 1450, y: 710, type: "slime" },
+            { x: 420, y: 420, type: "mushroom" },
+            { x: 520, y: 420, type: "slime" },
+            { x: 680, y: 340, type: "mushroom" },
+            { x: 880, y: 640, type: "slime" },
+            { x: 1020, y: 560, type: "slime" },
+            { x: 1180, y: 480, type: "slime" },
+            { x: 1320, y: 610, type: "mushroom" },
+            { x: 100, y: 540, type: "slime" },
+            { x: 180, y: 640, type: "mushroom" },
+            { x: 280, y: 380, type: "slime" },
+            { x: 550, y: 510, type: "slime" },
+            { x: 950, y: 640, type: "mushroom" },
+            { x: 1250, y: 480, type: "slime" },
+            { x: 1400, y: 510, type: "mushroom" },
+            { x: 1500, y: 360, type: "mushroom" }
+        ],
+        items: [
+            { x: 430, y: 435, type: "potion" },
+            { x: 1100, y: 495, type: "potion" },
+            { x: 630, y: 355, type: "lightning" },
+            { x: 1400, y: 525, type: "lightning" },
+            { x: 280, y: 495, type: "fireball" },
+            { x: 1080, y: 395, type: "fireball" },
+            { x: 850, y: 445, type: "shuriken" },
+            { x: 200, y: 545, type: "shuriken" },
+            { x: 550, y: 495, type: "shuriken" },
+            { x: 1200, y: 545, type: "shuriken" }
+        ],
+        portals: [
+            { x: 1550, y: 346, targetStage: "Stage001", label: "초원 지대" },
+            { x: 80, y: 526, targetStage: "Stage005", label: "칠흑 광산" }
+        ],
+        spawners: [
+            { x: 50, y: 320, monsterType: "ghost" },
+            { x: 1490, y: 680, monsterType: "ghost" }
+        ],
+        ladders: [
+            { x: 352, y: 224, height: 288 }
+        ],
+        background: {
+            skyTop: '#87CEEB',
+            skyBottom: '#E0F6FF',
+            mountains: [
+                { x1: 0, peak: 150, x2: 300, color: '#9DC183' },
+                { x1: 200, peak: 200, x2: 600, color: '#7CAF6B' },
+                { x1: 500, peak: 120, x2: 900, color: '#9DC183' },
+                { x1: 800, peak: 180, x2: 1200, color: '#7CAF6B' },
+                { x1: 1100, peak: 140, x2: 1400, color: '#9DC183' },
+                { x1: 1300, peak: 160, x2: 1600, color: '#7CAF6B' }
+            ]
+        }
+    },
+    "Stage005": {
+        number: 5,
+        displayName: "칠흑 광산",
+        playerStart: { x: 100, y: 710 },
+        platforms: [
+            { x: 100, y: 690, width: 200, height: 30 },
+            { x: 50, y: 590, width: 150, height: 30 },
+            { x: 250, y: 530, width: 180, height: 30 },
+            { x: 80, y: 430, width: 140, height: 30 },
+            { x: 450, y: 660, width: 200, height: 30 },
+            { x: 550, y: 560, width: 150, height: 30 },
+            { x: 400, y: 470, width: 180, height: 30 },
+            { x: 600, y: 390, width: 160, height: 30 },
+            { x: 850, y: 690, width: 200, height: 30 },
+            { x: 1000, y: 610, width: 180, height: 30 },
+            { x: 1150, y: 530, width: 200, height: 30 },
+            { x: 1050, y: 430, width: 150, height: 30 },
+            { x: 1300, y: 660, width: 180, height: 30 },
+            { x: 1400, y: 560, width: 150, height: 30 },
+            { x: 1450, y: 410, width: 130, height: 30 },
+            { x: 256, y: 256, width: 160, height: 32 }
+        ],
+        monsters: [
+            { x: 500, y: 710, type: "slime" },
+            { x: 580, y: 510, type: "mushroom" },
+            { x: 630, y: 340, type: "slime" },
+            { x: 900, y: 710, type: "slime" },
+            { x: 1050, y: 560, type: "mushroom" },
+            { x: 1200, y: 480, type: "mushroom" },
+            { x: 1350, y: 610, type: "slime" },
+            { x: 1470, y: 360, type: "slime" },
+            { x: 300, y: 480, type: "mushroom" },
+            { x: 480, y: 610, type: "mushroom" },
+            { x: 1100, y: 640, type: "mushroom" },
+            { x: 350, y: 710, type: "slime" },
+            { x: 600, y: 710, type: "mushroom" },
+            { x: 750, y: 710, type: "slime" },
+            { x: 1000, y: 710, type: "mushroom" },
+            { x: 1150, y: 710, type: "slime" },
+            { x: 1300, y: 710, type: "mushroom" },
+            { x: 1450, y: 710, type: "slime" },
+            { x: 420, y: 420, type: "mushroom" },
+            { x: 520, y: 420, type: "slime" },
+            { x: 680, y: 340, type: "mushroom" },
+            { x: 880, y: 640, type: "slime" },
+            { x: 1020, y: 560, type: "slime" },
+            { x: 1180, y: 480, type: "slime" },
+            { x: 1320, y: 610, type: "mushroom" },
+            { x: 100, y: 540, type: "slime" },
+            { x: 180, y: 640, type: "mushroom" },
+            { x: 280, y: 380, type: "slime" },
+            { x: 550, y: 510, type: "slime" },
+            { x: 950, y: 640, type: "mushroom" },
+            { x: 1250, y: 480, type: "slime" },
+            { x: 1400, y: 510, type: "mushroom" },
+            { x: 1500, y: 360, type: "mushroom" }
+        ],
+        items: [
+            { x: 430, y: 435, type: "potion" },
+            { x: 1100, y: 495, type: "potion" },
+            { x: 630, y: 355, type: "lightning" },
+            { x: 1400, y: 525, type: "lightning" },
+            { x: 280, y: 495, type: "fireball" },
+            { x: 1080, y: 395, type: "fireball" },
+            { x: 850, y: 445, type: "shuriken" },
+            { x: 200, y: 545, type: "shuriken" },
+            { x: 550, y: 495, type: "shuriken" },
+            { x: 1200, y: 545, type: "shuriken" }
+        ],
+        portals: [
+            { x: 1550, y: 346, targetStage: "Stage004", label: "얼음 절벽" },
+            { x: 1520, y: 496, targetStage: "Stage003", label: "버려진 사막" }
+        ],
+        spawners: [
+            { x: 50, y: 320, monsterType: "ghost" },
+            { x: 1490, y: 680, monsterType: "ghost" }
+        ],
+        ladders: [
+            { x: 352, y: 224, height: 288 }
+        ],
+        background: {
+            skyTop: '#87CEEB',
+            skyBottom: '#E0F6FF',
+            mountains: [
+                { x1: 0, peak: 150, x2: 300, color: '#9DC183' },
+                { x1: 200, peak: 200, x2: 600, color: '#7CAF6B' },
+                { x1: 500, peak: 120, x2: 900, color: '#9DC183' },
+                { x1: 800, peak: 180, x2: 1200, color: '#7CAF6B' },
+                { x1: 1100, peak: 140, x2: 1400, color: '#9DC183' },
+                { x1: 1300, peak: 160, x2: 1600, color: '#7CAF6B' }
+            ]
+        }
+    },
+    "Stage000": {
+        number: 0,
+        displayName: "나뭇잎 마을",
+        playerStart: { x: 96, y: 722 },
+        platforms: [
+            { x: 256, y: 626, width: 512, height: 32 }
+        ],
+        monsters: [
+
+        ],
+        items: [
+
+        ],
+        portals: [
+            { x: 286, y: 562, targetStage: "Stage003", label: "버려진 사막" },
+            { x: 738, y: 562, targetStage: "Stage002", label: "어둠의 동굴" },
+            { x: 366, y: 562, targetStage: "Stage001", label: "초원 지대" }
+        ],
+        spawners: [
+
+        ],
+        background: {
+            skyTop: '#6B8E9F',
+            skyBottom: '#A8C8D8',
+            mountains: [
+                { x1: 0, peak: 200, x2: 400, color: '#8FA88F' },
+                { x1: 300, peak: 250, x2: 700, color: '#7A997A' },
+                { x1: 600, peak: 180, x2: 900, color: '#8FA88F' }
+            ]
+        }
+    },
+    "Stage006": {
+        number: 6,
+        displayName: "호박 광산",
+        playerStart: { x: 100, y: 710 },
+        platforms: [
+            { x: 50, y: 690, width: 180, height: 30 },
+            { x: 200, y: 610, width: 150, height: 30 },
+            { x: 80, y: 530, width: 140, height: 30 },
+            { x: 250, y: 450, width: 160, height: 30 },
+            { x: 50, y: 370, width: 130, height: 30 },
+            { x: 450, y: 690, width: 180, height: 30 },
+            { x: 550, y: 590, width: 150, height: 30 },
+            { x: 400, y: 490, width: 200, height: 30 },
+            { x: 600, y: 390, width: 160, height: 30 },
+            { x: 800, y: 660, width: 200, height: 30 },
+            { x: 950, y: 560, width: 180, height: 30 },
+            { x: 850, y: 460, width: 150, height: 30 },
+            { x: 1100, y: 690, width: 200, height: 30 },
+            { x: 1250, y: 590, width: 180, height: 30 },
+            { x: 1150, y: 490, width: 160, height: 30 },
+            { x: 1350, y: 410, width: 200, height: 30 }
+        ],
+        monsters: [
+            { x: 250, y: 560, type: "slime" },
+            { x: 500, y: 640, type: "mushroom" },
+            { x: 580, y: 540, type: "mushroom" },
+            { x: 450, y: 440, type: "slime" },
+            { x: 630, y: 340, type: "mushroom" },
+            { x: 850, y: 610, type: "slime" },
+            { x: 1000, y: 510, type: "mushroom" },
+            { x: 880, y: 410, type: "mushroom" },
+            { x: 1150, y: 640, type: "slime" },
+            { x: 1300, y: 540, type: "mushroom" },
+            { x: 1400, y: 360, type: "slime" },
+            { x: 250, y: 480, type: "mushroom" },
+            { x: 480, y: 440, type: "mushroom" },
+            { x: 900, y: 610, type: "mushroom" },
+            { x: 1200, y: 440, type: "mushroom" },
+            { x: 300, y: 710, type: "slime" },
+            { x: 450, y: 710, type: "mushroom" },
+            { x: 600, y: 710, type: "slime" },
+            { x: 750, y: 710, type: "mushroom" },
+            { x: 900, y: 710, type: "slime" },
+            { x: 1050, y: 710, type: "mushroom" },
+            { x: 1200, y: 710, type: "slime" },
+            { x: 1350, y: 710, type: "mushroom" },
+            { x: 1500, y: 710, type: "slime" },
+            { x: 150, y: 640, type: "mushroom" },
+            { x: 280, y: 560, type: "mushroom" },
+            { x: 120, y: 480, type: "slime" },
+            { x: 320, y: 400, type: "mushroom" },
+            { x: 100, y: 320, type: "slime" },
+            { x: 550, y: 640, type: "slime" },
+            { x: 620, y: 540, type: "slime" },
+            { x: 500, y: 440, type: "mushroom" },
+            { x: 700, y: 340, type: "slime" },
+            { x: 820, y: 610, type: "mushroom" },
+            { x: 970, y: 510, type: "slime" },
+            { x: 920, y: 410, type: "slime" },
+            { x: 1180, y: 640, type: "mushroom" },
+            { x: 1280, y: 540, type: "slime" },
+            { x: 1180, y: 440, type: "slime" },
+            { x: 1450, y: 360, type: "mushroom" },
+            { x: 380, y: 440, type: "slime" },
+            { x: 1100, y: 640, type: "slime" },
+            { x: 950, y: 610, type: "slime" },
+            { x: 1250, y: 440, type: "slime" },
+            { x: 1380, y: 360, type: "mushroom" }
+        ],
+        items: [
+            { x: 430, y: 455, type: "potion" },
+            { x: 1180, y: 455, type: "potion" },
+            { x: 630, y: 355, type: "lightning" },
+            { x: 1380, y: 375, type: "lightning" },
+            { x: 110, y: 495, type: "fireball" },
+            { x: 880, y: 425, type: "fireball" },
+            { x: 520, y: 455, type: "shuriken" }
+        ],
+        portals: [
+            { x: 80, y: 626, targetStage: "Stage002", label: "어둠의 동굴" },
+            { x: 80, y: 306, targetStage: "Stage001", label: "초원 지대" }
+        ],
+        spawners: [
+            { x: 64, y: 160, monsterType: "ghost" },
+            { x: 1490, y: 680, monsterType: "ghost" }
+        ],
+        background: {
+            skyTop: '#1a1a2e',
+            skyBottom: '#2d2d44',
+            mountains: [
+                { x1: 0, peak: 150, x2: 300, color: '#3d3d5c' },
+                { x1: 200, peak: 200, x2: 600, color: '#2d2d44' },
+                { x1: 500, peak: 120, x2: 900, color: '#3d3d5c' },
+                { x1: 800, peak: 180, x2: 1200, color: '#2d2d44' },
+                { x1: 1100, peak: 140, x2: 1400, color: '#3d3d5c' },
+                { x1: 1300, peak: 160, x2: 1600, color: '#2d2d44' }
+            ]
+        }
     }
 };
 
 // 월드맵 노드/연결 데이터
 const worldMapData = {
     nodes: [
-        { id: "Lobby", x: 400, y: 380, label: "나뭇잎 마을", reqLevel: 0, color: '#4CAF50', icon: 'town' },
-        { id: "Stage001", x: 400, y: 250, label: "초원 지대", reqLevel: 1, color: '#87CEEB', icon: 'field', monsters: ["슬라임", "버섯"] },
-        { id: "Stage002", x: 250, y: 140, label: "어둠의 동굴", reqLevel: 5, color: '#6a5acd', icon: 'cave', monsters: ["슬라임", "버섯", "유령"] },
-        { id: "Stage003", x: 550, y: 140, label: "버려진 사막", reqLevel: 10, color: '#f4a460', icon: 'desert', monsters: ["슬라임"] },
+        { id: "Stage000", x: 406, y: 355, label: "나뭇잎 마을", type: 'lobby', reqLevel: 0, color: '#4CAF50', icon: 'field' },
+        { id: "Stage001", x: 397, y: 88, label: "초원 지대", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
+        { id: "Stage003", x: 156, y: 203, label: "버려진 사막", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
+        { id: "Stage004", x: 143, y: 50, label: "얼음 절벽", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
+        { id: "Stage005", x: 57, y: 126, label: "칠흑 광산", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
+        { id: "Stage002", x: 655, y: 200, label: "어둠의 동굴", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
+        { id: "Stage006", x: 714, y: 59, label: "호박 광산", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' }
     ],
     edges: [
-        ["Lobby", "Stage001"],
+        ["Stage000", "Stage003"],
+        ["Stage000", "Stage002"],
+        ["Stage000", "Stage001"],
         ["Stage001", "Stage002"],
         ["Stage001", "Stage003"],
+        ["Stage001", "Stage004"],
+        ["Stage003", "Stage005"],
+        ["Stage004", "Stage005"],
+        ["Stage002", "Stage006"],
+        ["Stage006", "Stage001"]
     ]
 };
 
@@ -5384,6 +5718,34 @@ function drawWorldMap() {
         ctx.setLineDash([]);
     });
 
+    // 노드 모양 패스 생성 (타입별)
+    function buildGameNodePath(cx, cy, r, type) {
+        ctx.beginPath();
+        if (type === 'dungeon') {
+            ctx.moveTo(cx, cy - r);
+            ctx.lineTo(cx + r, cy);
+            ctx.lineTo(cx, cy + r);
+            ctx.lineTo(cx - r, cy);
+            ctx.closePath();
+        } else if (type === 'stage') {
+            const hw = r * 0.85;
+            const hh = r * 0.85;
+            const cr = r * 0.25;
+            ctx.moveTo(cx - hw + cr, cy - hh);
+            ctx.lineTo(cx + hw - cr, cy - hh);
+            ctx.quadraticCurveTo(cx + hw, cy - hh, cx + hw, cy - hh + cr);
+            ctx.lineTo(cx + hw, cy + hh - cr);
+            ctx.quadraticCurveTo(cx + hw, cy + hh, cx + hw - cr, cy + hh);
+            ctx.lineTo(cx - hw + cr, cy + hh);
+            ctx.quadraticCurveTo(cx - hw, cy + hh, cx - hw, cy + hh - cr);
+            ctx.lineTo(cx - hw, cy - hh + cr);
+            ctx.quadraticCurveTo(cx - hw, cy - hh, cx - hw + cr, cy - hh);
+            ctx.closePath();
+        } else {
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        }
+    }
+
     // 노드 그리기
     nodes.forEach(node => {
         const nx = mapOffsetX + node.x;
@@ -5392,12 +5754,12 @@ function drawWorldMap() {
         const isUnlocked = unlockedStages.has(node.id);
         const isCurrent = currentStage === node.id;
         const isHover = worldMapHoverNode === node.id;
+        const nodeType = node.type || 'stage';
 
         // 현재 위치 깜빡임 효과
         if (isCurrent) {
             const pulse = Math.sin(worldMapAnimTimer * 0.08) * 0.3 + 0.7;
-            ctx.beginPath();
-            ctx.arc(nx, ny, radius + 8, 0, Math.PI * 2);
+            buildGameNodePath(nx, ny, radius + 8, nodeType);
             ctx.fillStyle = `rgba(0, 255, 100, ${pulse * 0.3})`;
             ctx.fill();
             ctx.strokeStyle = `rgba(0, 255, 100, ${pulse})`;
@@ -5407,15 +5769,13 @@ function drawWorldMap() {
 
         // 호버 효과
         if (isHover && isUnlocked) {
-            ctx.beginPath();
-            ctx.arc(nx, ny, radius + 5, 0, Math.PI * 2);
+            buildGameNodePath(nx, ny, radius + 5, nodeType);
             ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
             ctx.fill();
         }
 
-        // 노드 원형 배경
-        ctx.beginPath();
-        ctx.arc(nx, ny, radius, 0, Math.PI * 2);
+        // 노드 배경
+        buildGameNodePath(nx, ny, radius, nodeType);
         if (isUnlocked) {
             const nodeGrad = ctx.createRadialGradient(nx - 5, ny - 5, 2, nx, ny, radius);
             nodeGrad.addColorStop(0, lightenColor(node.color, 40));
@@ -5628,9 +5988,21 @@ function handleWorldMapClick(mouseX, mouseY) {
     for (const node of worldMapData.nodes) {
         const nx = mapOffsetX + node.x;
         const ny = mapOffsetY + node.y;
-        const dist = Math.sqrt((mouseX - nx) ** 2 + (mouseY - ny) ** 2);
+        const dx = mouseX - nx;
+        const dy = mouseY - ny;
+        const r = 28;
+        const nodeType = node.type || 'stage';
+        let hit = false;
+        if (nodeType === 'dungeon') {
+            hit = (Math.abs(dx) + Math.abs(dy)) <= r;
+        } else if (nodeType === 'stage') {
+            const hw = r * 0.85;
+            hit = Math.abs(dx) <= hw && Math.abs(dy) <= hw;
+        } else {
+            hit = dx * dx + dy * dy <= r * r;
+        }
 
-        if (dist <= 28) {
+        if (hit) {
             if (!unlockedStages.has(node.id)) {
                 uiNotifications.push(new UINotification(
                     canvas.width / 2, canvas.height / 2 - 50,
@@ -5665,8 +6037,20 @@ function handleWorldMapMouseMove(mouseX, mouseY) {
     for (const node of worldMapData.nodes) {
         const nx = mapOffsetX + node.x;
         const ny = mapOffsetY + node.y;
-        const dist = Math.sqrt((mouseX - nx) ** 2 + (mouseY - ny) ** 2);
-        if (dist <= 28) {
+        const dx = mouseX - nx;
+        const dy = mouseY - ny;
+        const r = 28;
+        const nodeType = node.type || 'stage';
+        let hit = false;
+        if (nodeType === 'dungeon') {
+            hit = (Math.abs(dx) + Math.abs(dy)) <= r;
+        } else if (nodeType === 'stage') {
+            const hw = r * 0.85;
+            hit = Math.abs(dx) <= hw && Math.abs(dy) <= hw;
+        } else {
+            hit = dx * dx + dy * dy <= r * r;
+        }
+        if (hit) {
             worldMapHoverNode = node.id;
             break;
         }

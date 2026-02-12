@@ -1,6 +1,6 @@
 {
-  "number": 3,
-  "displayName": "버려진 사막",
+  "number": 6,
+  "displayName": "호박 광산",
   "playerStart": {
     "x": 100,
     "y": 710
@@ -328,11 +328,6 @@
       "x": 1380,
       "y": 360,
       "type": "mushroom"
-    },
-    {
-      "x": 1056,
-      "y": 320,
-      "monsterId": 100004
     }
   ],
   "items": [
@@ -367,35 +362,29 @@
       "type": "fireball"
     },
     {
-      "x": 700,
-      "y": 465,
+      "x": 520,
+      "y": 455,
       "type": "shuriken"
     }
   ],
   "portals": [
     {
-      "x": 200,
-      "y": 620,
-      "targetStage": "Stage001",
-      "label": "초원 지대"
-    },
-    {
-      "x": 1520,
-      "y": 346,
-      "targetStage": "Stage000",
-      "label": "나뭇잎 마을"
+      "x": 80,
+      "y": 626,
+      "targetStage": "Stage002",
+      "label": "어둠의 동굴"
     },
     {
       "x": 80,
-      "y": 626,
-      "targetStage": "Stage005",
-      "label": "칠흑 광산"
+      "y": 306,
+      "targetStage": "Stage001",
+      "label": "초원 지대"
     }
   ],
   "spawners": [
     {
       "x": 64,
-      "y": 192,
+      "y": 160,
       "monsterType": "ghost"
     },
     {
@@ -406,44 +395,44 @@
   ],
   "ladders": [],
   "background": {
-    "skyTop": "#f4a460",
-    "skyBottom": "#ffe4b5",
+    "skyTop": "#1a1a2e",
+    "skyBottom": "#2d2d44",
     "mountains": [
       {
         "x1": 0,
         "peak": 150,
         "x2": 300,
-        "color": "#deb887"
+        "color": "#3d3d5c"
       },
       {
         "x1": 200,
         "peak": 200,
         "x2": 600,
-        "color": "#d2b48c"
+        "color": "#2d2d44"
       },
       {
         "x1": 500,
         "peak": 120,
         "x2": 900,
-        "color": "#deb887"
+        "color": "#3d3d5c"
       },
       {
         "x1": 800,
         "peak": 180,
         "x2": 1200,
-        "color": "#d2b48c"
+        "color": "#2d2d44"
       },
       {
         "x1": 1100,
         "peak": 140,
         "x2": 1400,
-        "color": "#deb887"
+        "color": "#3d3d5c"
       },
       {
         "x1": 1300,
         "peak": 160,
         "x2": 1600,
-        "color": "#d2b48c"
+        "color": "#2d2d44"
       }
     ]
   }

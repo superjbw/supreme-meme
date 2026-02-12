@@ -1,0 +1,2885 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage Connector - World Map Editor</title>
+    <style>
+        @font-face {
+            font-family: 'MaplestoryOTFBold';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/MaplestoryOTFBold.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* 상단 툴바 */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: #16213e;
+            border-bottom: 2px solid #0f3460;
+            flex-wrap: wrap;
+        }
+        .toolbar button {
+            padding: 7px 14px;
+            border: none;
+            border-radius: 4px;
+            background: #e94560;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        .toolbar button:hover { background: #ff6b6b; }
+        .toolbar button.secondary { background: #0f3460; }
+        .toolbar button.secondary:hover { background: #1a4a7a; }
+        .toolbar button.success { background: #2e7d32; }
+        .toolbar button.success:hover { background: #43a047; }
+        .toolbar .sep {
+            width: 1px; height: 28px;
+            background: #0f3460; margin: 0 4px;
+        }
+        .toolbar .zoom-group {
+            display: flex; align-items: center; gap: 4px;
+            margin-left: auto;
+        }
+        .toolbar .zoom-group span {
+            font-size: 12px; color: #aaa;
+            min-width: 42px; text-align: center;
+        }
+
+        /* 메인 레이아웃 */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 46px - 24px);
+        }
+
+        /* 왼쪽 도구 패널 */
+        .tool-panel {
+            width: 110px;
+            background: #16213e;
+            padding: 12px 8px;
+            border-right: 2px solid #0f3460;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .tool-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 6px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            background: #0f3460;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 11px;
+        }
+        .tool-btn:hover { background: #1a4a7a; color: #fff; }
+        .tool-btn.active {
+            border-color: #e94560;
+            background: #2a1a3a;
+            color: #fff;
+        }
+        .tool-btn .icon { font-size: 22px; margin-bottom: 3px; }
+        .tool-btn .shortcut {
+            font-size: 9px; color: #666; margin-top: 2px;
+        }
+
+        /* 캔버스 영역 */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #111;
+        }
+        #graphCanvas {
+            display: block;
+            position: absolute;
+            top: 0; left: 0;
+        }
+
+        /* 오른쪽 속성 패널 */
+        .prop-panel {
+            width: 280px;
+            background: #16213e;
+            padding: 12px;
+            border-left: 2px solid #0f3460;
+            overflow-y: auto;
+        }
+        .prop-panel h3 {
+            color: #e94560;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .prop-group {
+            margin-bottom: 10px;
+        }
+        .prop-group label {
+            display: block;
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 3px;
+        }
+        .prop-group input, .prop-group select {
+            width: 100%;
+            padding: 5px 8px;
+            border: none;
+            border-radius: 4px;
+            background: #0f3460;
+            color: #fff;
+            font-size: 12px;
+        }
+        .prop-group input[type="color"] {
+            padding: 2px;
+            height: 30px;
+            cursor: pointer;
+        }
+        .prop-row {
+            display: flex;
+            gap: 8px;
+        }
+        .prop-row .prop-group { flex: 1; }
+        .portal-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .portal-item {
+            background: #0f3460;
+            border-radius: 4px;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .portal-item .portal-info { flex: 1; }
+        .portal-item button {
+            background: #e94560;
+            border: none;
+            color: #fff;
+            border-radius: 3px;
+            padding: 2px 6px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+        .edge-item {
+            background: #0f3460;
+            border-radius: 4px;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .edge-item:hover { background: #1a4a7a; }
+        .edge-item.selected { border: 1px solid #e94560; }
+
+        /* 상태바 */
+        .status-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            padding: 4px 15px;
+            background: #0f3460;
+            font-size: 11px;
+            color: #888;
+            display: flex;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        /* 모달 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: #16213e;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 500px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal h3 { color: #e94560; margin-bottom: 12px; }
+        .modal textarea {
+            width: 100%;
+            min-height: 300px;
+            background: #0a0a1a;
+            color: #0f0;
+            border: 1px solid #0f3460;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+        .modal .modal-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: flex-end;
+        }
+        .modal button {
+            padding: 7px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .modal button.primary { background: #e94560; color: #fff; }
+        .modal button.secondary { background: #0f3460; color: #fff; }
+
+        /* 토스트 알림 */
+        .toast {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: #2e7d32;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 200;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.error { background: #c62828; }
+
+        /* === Level Editor 전용 스타일 === */
+        .sub-tool-panel {
+            display: none; position: fixed; top: 70px; left: 140px;
+            padding: 12px 16px; background: linear-gradient(135deg, #1a1a3a, #2a2a5a);
+            border-radius: 10px; border: 2px solid #e94560;
+            box-shadow: 0 8px 32px rgba(233,69,96,0.3); z-index: 100; min-width: 180px;
+        }
+        .sub-tool-panel.active { display: block; }
+        .sub-tool-panel label { display: block; font-size: 12px; font-weight: bold; color: #e94560; margin-bottom: 6px; }
+        .sub-tool-panel select {
+            width: 100%; padding: 8px 10px; border: 2px solid #4a4a8a; border-radius: 6px;
+            background: #0f3460; color: #fff; font-size: 13px; cursor: pointer;
+        }
+        .sub-tool-panel input[type="number"] {
+            width: 100%; padding: 6px 10px; margin-top: 4px;
+            border: none; border-radius: 4px; background: #0f3460; color: #fff; font-size: 12px;
+        }
+        .tool-btn .sub-type {
+            font-size: 9px; color: #e94560; background: rgba(233,69,96,0.2);
+            padding: 1px 5px; border-radius: 4px; margin-top: 2px;
+        }
+        .portal-modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; }
+        .portal-modal.active { display: flex; }
+        .portal-modal-content { background: #16213e; padding: 25px; border-radius: 8px; min-width: 400px; }
+        .portal-modal-content h3 { margin-bottom: 15px; color: #e94560; }
+        .portal-modal-content .prop-group { margin-bottom: 10px; }
+        .portal-modal-content .btn-row { display: flex; gap: 10px; margin-top: 15px; justify-content: flex-end; }
+        .canvas-container.leveleditor { overflow: auto; }
+        .canvas-container.leveleditor #graphCanvas { position: static; cursor: crosshair; }
+        .le-bg-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid #0f3460; }
+        .le-bg-section h4 { color: #e94560; font-size: 12px; margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+
+<!-- 상단 툴바 -->
+<div class="toolbar">
+    <button class="secondary" id="btnBackToWorldMap" style="display:none" title="월드맵으로 돌아가기">← 월드맵</button>
+    <div id="wmToolbarItems" style="display:flex;align-items:center;gap:8px;">
+        <button class="secondary" id="btnSelectFolder" title="프로젝트 루트 폴더 선택 (game.js + Stage/ 포함)">📂 프로젝트 폴더</button>
+        <button class="secondary" id="btnLoadGameJs" title="game.js에서 worldMapData 로드">📄 game.js 로드</button>
+        <div class="sep"></div>
+        <button id="btnAddNode">➕ 노드 추가</button>
+        <div class="sep"></div>
+        <button class="secondary" id="btnExport" title="worldMapData 코드 생성">📋 내보내기</button>
+        <button class="success" id="btnSaveStages" title="Stage JSON 파일 저장">💾 Stage 저장</button>
+        <button class="success" id="btnPatchGameJs" title="game.js에 worldMapData 직접 패치">⚡ game.js 적용</button>
+        <div class="sep"></div>
+        <button class="secondary" id="btnUndo" title="실행 취소 (Ctrl+Z)">↩ 되돌리기</button>
+        <button class="secondary" id="btnRedo" title="다시 실행 (Ctrl+Y)">↪ 다시</button>
+    </div>
+    <div id="leToolbarItems" style="display:none;align-items:center;gap:8px;">
+        <span id="leStageLabel" style="color:#e94560;font-weight:bold;font-size:13px;"></span>
+        <div class="sep"></div>
+        <button class="secondary" id="leUndo" title="실행 취소 (Ctrl+Z)">↩ 되돌리기</button>
+        <button style="background:#9333ea;" id="lePreview" title="미리보기">🎮 미리보기</button>
+    </div>
+    <div class="zoom-group">
+        <button class="secondary" id="btnZoomOut">−</button>
+        <span id="zoomLabel">100%</span>
+        <button class="secondary" id="btnZoomIn">+</button>
+        <button class="secondary" id="btnZoomReset">↺</button>
+    </div>
+</div>
+
+<!-- 메인 -->
+<div class="main-container">
+    <!-- 월드맵 도구 패널 -->
+    <div class="tool-panel" id="wmToolPanel">
+        <div class="tool-btn active" data-tool="select" title="선택/이동 (V)">
+            <div class="icon">🖱</div>선택
+            <div class="shortcut">V</div>
+        </div>
+        <div class="tool-btn" data-tool="connect" title="연결 (C)">
+            <div class="icon">🔗</div>연결
+            <div class="shortcut">C</div>
+        </div>
+        <div class="tool-btn" data-tool="delete" title="삭제 (D)">
+            <div class="icon">🗑</div>삭제
+            <div class="shortcut">D</div>
+        </div>
+    </div>
+    <!-- 레벨 에디터 도구 패널 -->
+    <div class="tool-panel" id="leToolPanel" style="display:none">
+        <div class="tool-btn active" data-le-tool="select" onclick="leSetTool('select')">
+            <div class="icon">🖱️</div>선택<div class="shortcut">[1]</div>
+        </div>
+        <div class="tool-btn" data-le-tool="platform" onclick="leSetTool('platform')">
+            <div class="icon">📦</div>플랫폼<div class="shortcut">[2]</div>
+        </div>
+        <div class="tool-btn" data-le-tool="monster" onclick="leSetTool('monster')">
+            <div class="icon">👾</div>몬스터<div class="sub-type" id="monsterTypeLabel"></div><div class="shortcut">[3]</div>
+        </div>
+        <div class="tool-btn" data-le-tool="item" onclick="leSetTool('item')">
+            <div class="icon">⭐</div>아이템<div class="sub-type" id="itemTypeLabel"></div><div class="shortcut">[4]</div>
+        </div>
+        <div class="tool-btn" data-le-tool="portal" onclick="leSetTool('portal')">
+            <div class="icon">🌀</div>포탈<div class="shortcut">[5]</div>
+        </div>
+        <div class="tool-btn" data-le-tool="spawner" onclick="leSetTool('spawner')">
+            <div class="icon">💀</div>스포너<div class="sub-type" id="spawnerTypeLabel"></div><div class="shortcut">[6]</div>
+        </div>
+        <div class="tool-btn" data-le-tool="ladder" onclick="leSetTool('ladder')">
+            <div class="icon">🪜</div>사다리<div class="shortcut">[7]</div>
+        </div>
+        <div class="tool-btn" data-le-tool="playerStart" onclick="leSetTool('playerStart')">
+            <div class="icon">🏃</div>시작점<div class="shortcut">[8]</div>
+        </div>
+        <!-- 서브 도구 패널들 -->
+        <div class="sub-tool-panel" id="monsterSubTool">
+            <label>몬스터 선택</label>
+            <select id="monsterType" onchange="leUpdateSubTypeLabel('monster')"></select>
+        </div>
+        <div class="sub-tool-panel" id="itemSubTool">
+            <label>아이템 타입</label>
+            <select id="itemType" onchange="leUpdateSubTypeLabel('item')">
+                <option value="potion">포션</option>
+                <option value="lightning">번개</option>
+                <option value="fireball">화염구</option>
+                <option value="shuriken">표창</option>
+            </select>
+        </div>
+        <div class="sub-tool-panel" id="spawnerSubTool">
+            <label>스포너 몬스터</label>
+            <select id="spawnerType" onchange="leUpdateSubTypeLabel('spawner')"></select>
+            <label style="margin-top:8px">스폰 주기 (초)</label>
+            <input type="number" id="spawnerInterval" value="5" min="1" max="60" step="0.5">
+            <label>최대 몬스터 수</label>
+            <input type="number" id="spawnerMaxMonsters" value="2" min="1" max="10">
+        </div>
+    </div>
+
+    <!-- 캔버스 -->
+    <div class="canvas-container" id="canvasContainer">
+        <canvas id="graphCanvas"></canvas>
+    </div>
+
+    <!-- 오른쪽 속성 패널 -->
+    <div class="prop-panel" id="propPanel">
+        <h3>속성</h3>
+        <div id="propContent">
+            <p style="color:#666; font-size:12px;">노드 또는 엣지를 선택하세요</p>
+        </div>
+    </div>
+</div>
+
+<!-- 상태바 -->
+<div class="status-bar">
+    <span id="statusLeft">Stage Connector 준비</span>
+    <span id="statusRight">노드: 0 | 엣지: 0</span>
+</div>
+
+<!-- 토스트 알림 -->
+<div class="toast" id="toast"></div>
+
+<!-- 내보내기 모달 -->
+<div class="modal-overlay" id="exportModal">
+    <div class="modal">
+        <h3>worldMapData 내보내기</h3>
+        <textarea id="exportCode" readonly></textarea>
+        <div class="modal-buttons">
+            <button class="secondary" id="btnCopyCode">📋 클립보드 복사</button>
+            <button class="primary" id="btnCloseExport">닫기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 포탈 설정 모달 (레벨 에디터용) -->
+<div class="portal-modal" id="lePortalModal">
+    <div class="portal-modal-content">
+        <h3>포탈 설정</h3>
+        <div class="prop-group">
+            <label style="display:block;font-size:11px;color:#888;margin-bottom:3px;">이동할 스테이지</label>
+            <input type="text" id="lePortalTargetStage" placeholder="예: Stage001" value="Stage001"
+                   style="width:100%;padding:6px 10px;border:none;border-radius:4px;background:#0f3460;color:#fff;font-size:13px;">
+        </div>
+        <div class="btn-row">
+            <button class="secondary" style="padding:7px 16px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;font-size:12px;background:#0f3460;color:#fff;" onclick="leClosePortalModal()">취소</button>
+            <button style="padding:7px 16px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;font-size:12px;background:#e94560;color:#fff;" onclick="leConfirmPortal()">확인</button>
+        </div>
+    </div>
+</div>
+
+<!-- 몬스터 데이터 -->
+<script src="Monster/Monster.js"></script>
+
+<script>
+// ============================================================
+// Stage Connector Tool (World Map + Level Editor 통합)
+// ============================================================
+
+// --- 뷰 전환 ---
+let currentView = 'worldmap'; // 'worldmap' | 'leveleditor'
+let editingStageId = null;
+
+// --- 상태 ---
+let nodes = [];
+let edges = [];  // [[stageA, stageB], ...]
+let stageDataMap = {};  // stageId → full JSON data
+let stageFileHandles = {};  // stageId → FileSystemFileHandle
+let gamejsHandle = null;
+let folderHandle = null;
+
+let selectedNode = null;
+let selectedEdge = null;
+let currentTool = 'select';
+let clipboardNode = null; // 복사된 노드 데이터
+
+// 카메라/줌
+let camera = { x: 400, y: 225 };
+let zoom = 1;
+const ZOOM_MIN = 0.25;
+const ZOOM_MAX = 4;
+const ZOOM_STEP = 0.1;
+
+// 드래그 상태
+let isDragging = false;
+let isPanning = false;
+let isConnecting = false;
+let dragStartWorld = { x: 0, y: 0 };
+let dragOffset = { x: 0, y: 0 };
+let connectSource = null;
+let connectMousePos = null;
+let panStart = { x: 0, y: 0 };
+let cameraStart = { x: 0, y: 0 };
+
+// Undo/Redo
+let undoStack = [];
+let redoStack = [];
+const MAX_UNDO = 50;
+let dirty = false;
+
+// 캔버스
+const canvas = document.getElementById('graphCanvas');
+const ctx = canvas.getContext('2d');
+const container = document.getElementById('canvasContainer');
+
+// 노드 시각 설정
+const NODE_RADIUS = 30;
+const ICON_TYPES = ['town', 'field', 'cave', 'desert', 'forest', 'volcano', 'snow', 'castle'];
+const NODE_TYPES = ['lobby', 'stage', 'dungeon'];
+
+// ============================================================
+// 초기화
+// ============================================================
+function init() {
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    setupCanvasEvents();
+    setupToolbar();
+    setupToolPanel();
+    setupKeyboard();
+    leLoadMonsterData();
+    // 뒤로가기 버튼
+    document.getElementById('btnBackToWorldMap').addEventListener('click', switchToWorldMap);
+    // 에디터 툴바 버튼
+    document.getElementById('leUndo').addEventListener('click', leUndo);
+    document.getElementById('lePreview').addEventListener('click', lePreview);
+    window.addEventListener('beforeunload', e => {
+        if (dirty) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+    render();
+}
+
+function resizeCanvas() {
+    if (currentView === 'worldmap') {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        canvas.style.position = 'absolute';
+        render();
+    } else {
+        canvas.width = LE_WORLD_WIDTH * leZoom;
+        canvas.height = LE_WORLD_HEIGHT * leZoom;
+        canvas.style.position = 'static';
+        leRender();
+    }
+}
+
+// ============================================================
+// Undo / Redo
+// ============================================================
+function saveState() {
+    undoStack.push({
+        nodes: JSON.parse(JSON.stringify(nodes)),
+        edges: JSON.parse(JSON.stringify(edges)),
+        stageDataMap: JSON.parse(JSON.stringify(stageDataMap))
+    });
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    redoStack = [];
+    dirty = true;
+}
+
+function undo() {
+    if (undoStack.length === 0) return;
+    redoStack.push({
+        nodes: JSON.parse(JSON.stringify(nodes)),
+        edges: JSON.parse(JSON.stringify(edges)),
+        stageDataMap: JSON.parse(JSON.stringify(stageDataMap))
+    });
+    const state = undoStack.pop();
+    nodes = state.nodes;
+    edges = state.edges;
+    stageDataMap = state.stageDataMap;
+    selectedNode = null;
+    selectedEdge = null;
+    updatePropPanel();
+    updateStatus();
+    render();
+}
+
+function redo() {
+    if (redoStack.length === 0) return;
+    undoStack.push({
+        nodes: JSON.parse(JSON.stringify(nodes)),
+        edges: JSON.parse(JSON.stringify(edges)),
+        stageDataMap: JSON.parse(JSON.stringify(stageDataMap))
+    });
+    const state = redoStack.pop();
+    nodes = state.nodes;
+    edges = state.edges;
+    stageDataMap = state.stageDataMap;
+    selectedNode = null;
+    selectedEdge = null;
+    updatePropPanel();
+    updateStatus();
+    render();
+}
+
+// ============================================================
+// 좌표 변환
+// ============================================================
+function screenToWorld(sx, sy) {
+    return {
+        x: (sx - canvas.width / 2) / zoom + camera.x,
+        y: (sy - canvas.height / 2) / zoom + camera.y
+    };
+}
+
+function worldToScreen(wx, wy) {
+    return {
+        x: (wx - camera.x) * zoom + canvas.width / 2,
+        y: (wy - camera.y) * zoom + canvas.height / 2
+    };
+}
+
+// ============================================================
+// 히트 테스트
+// ============================================================
+function hitTestNode(wx, wy) {
+    for (let i = nodes.length - 1; i >= 0; i--) {
+        const n = nodes[i];
+        const dx = wx - n.x;
+        const dy = wy - n.y;
+        const type = n.type || 'stage';
+        let hit = false;
+        if (type === 'dungeon') {
+            // 마름모: |dx|/R + |dy|/R <= 1
+            hit = (Math.abs(dx) + Math.abs(dy)) <= NODE_RADIUS;
+        } else if (type === 'stage') {
+            // 둥근 사각형 (AABB 근사)
+            const hw = NODE_RADIUS * 0.85;
+            hit = Math.abs(dx) <= hw && Math.abs(dy) <= hw;
+        } else {
+            // lobby: 원형
+            hit = dx * dx + dy * dy <= NODE_RADIUS * NODE_RADIUS;
+        }
+        if (hit) return n;
+    }
+    return null;
+}
+
+function hitTestEdge(wx, wy) {
+    const threshold = 8 / zoom;
+    for (let i = edges.length - 1; i >= 0; i--) {
+        const [a, b] = edges[i];
+        const na = nodes.find(n => n.id === a);
+        const nb = nodes.find(n => n.id === b);
+        if (!na || !nb) continue;
+        const dist = pointToSegmentDist(wx, wy, na.x, na.y, nb.x, nb.y);
+        if (dist <= threshold) return edges[i];
+    }
+    return null;
+}
+
+function pointToSegmentDist(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+    let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+// ============================================================
+// 캔버스 이벤트
+// ============================================================
+function setupCanvasEvents() {
+    canvas.addEventListener('mousedown', (e) => {
+        if (currentView === 'worldmap') onMouseDown(e);
+        else leOnMouseDown(e);
+    });
+    canvas.addEventListener('mousemove', (e) => {
+        if (currentView === 'worldmap') onMouseMove(e);
+        else leOnMouseMove(e);
+    });
+    canvas.addEventListener('mouseup', (e) => {
+        if (currentView === 'worldmap') onMouseUp(e);
+        else leOnMouseUp(e);
+    });
+    canvas.addEventListener('wheel', (e) => {
+        if (currentView === 'worldmap') onWheel(e);
+        else leOnWheel(e);
+    }, { passive: false });
+    canvas.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (currentView === 'leveleditor') leOnContextMenu(e);
+    });
+}
+
+function onMouseDown(e) {
+    const rect = canvas.getBoundingClientRect();
+    const sx = e.clientX - rect.left;
+    const sy = e.clientY - rect.top;
+    const world = screenToWorld(sx, sy);
+
+    // 우클릭 또는 중간 버튼: 팬
+    if (e.button === 1 || e.button === 2) {
+        isPanning = true;
+        panStart = { x: e.clientX, y: e.clientY };
+        cameraStart = { ...camera };
+        canvas.style.cursor = 'grabbing';
+        return;
+    }
+
+    if (currentTool === 'select') {
+        const node = hitTestNode(world.x, world.y);
+        if (node) {
+            selectedNode = node;
+            selectedEdge = null;
+            isDragging = true;
+            dragOffset = { x: world.x - node.x, y: world.y - node.y };
+            updatePropPanel();
+            render();
+            return;
+        }
+        const edge = hitTestEdge(world.x, world.y);
+        if (edge) {
+            selectedNode = null;
+            selectedEdge = edge;
+            updatePropPanel();
+            render();
+            return;
+        }
+        // 빈 공간 클릭: 팬 시작
+        isPanning = true;
+        panStart = { x: e.clientX, y: e.clientY };
+        cameraStart = { ...camera };
+        canvas.style.cursor = 'grabbing';
+        selectedNode = null;
+        selectedEdge = null;
+        updatePropPanel();
+        render();
+    } else if (currentTool === 'connect') {
+        const node = hitTestNode(world.x, world.y);
+        if (node) {
+            isConnecting = true;
+            connectSource = node;
+            connectMousePos = { x: sx, y: sy };
+        }
+    } else if (currentTool === 'delete') {
+        const node = hitTestNode(world.x, world.y);
+        if (node) {
+            saveState();
+            deleteNode(node.id);
+            render();
+            return;
+        }
+        const edge = hitTestEdge(world.x, world.y);
+        if (edge) {
+            saveState();
+            deleteEdge(edge);
+            render();
+            return;
+        }
+    }
+}
+
+function onMouseMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    const sx = e.clientX - rect.left;
+    const sy = e.clientY - rect.top;
+    const world = screenToWorld(sx, sy);
+
+    if (isPanning) {
+        const dx = (e.clientX - panStart.x) / zoom;
+        const dy = (e.clientY - panStart.y) / zoom;
+        camera.x = cameraStart.x - dx;
+        camera.y = cameraStart.y - dy;
+        render();
+        return;
+    }
+
+    if (isDragging && selectedNode) {
+        selectedNode.x = Math.round(world.x - dragOffset.x);
+        selectedNode.y = Math.round(world.y - dragOffset.y);
+        render();
+        return;
+    }
+
+    if (isConnecting) {
+        connectMousePos = { x: sx, y: sy };
+        render();
+        return;
+    }
+
+    // 호버 커서
+    const node = hitTestNode(world.x, world.y);
+    const edge = hitTestEdge(world.x, world.y);
+    if (currentTool === 'select') {
+        canvas.style.cursor = node ? 'move' : (edge ? 'pointer' : 'default');
+    } else if (currentTool === 'connect') {
+        canvas.style.cursor = node ? 'crosshair' : 'default';
+    } else if (currentTool === 'delete') {
+        canvas.style.cursor = (node || edge) ? 'pointer' : 'default';
+    }
+}
+
+function onMouseUp(e) {
+    if (isPanning) {
+        isPanning = false;
+        canvas.style.cursor = 'default';
+        return;
+    }
+
+    if (isDragging && selectedNode) {
+        saveState();
+        isDragging = false;
+        updatePropPanel();
+        return;
+    }
+
+    if (isConnecting && connectSource) {
+        const rect = canvas.getBoundingClientRect();
+        const sx = e.clientX - rect.left;
+        const sy = e.clientY - rect.top;
+        const world = screenToWorld(sx, sy);
+        const target = hitTestNode(world.x, world.y);
+        if (target && target.id !== connectSource.id) {
+            const exists = edges.some(([a, b]) =>
+                (a === connectSource.id && b === target.id) ||
+                (a === target.id && b === connectSource.id)
+            );
+            if (!exists) {
+                saveState();
+                addEdge(connectSource.id, target.id);
+            }
+        }
+        isConnecting = false;
+        connectSource = null;
+        connectMousePos = null;
+        render();
+    }
+}
+
+function onWheel(e) {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+    const oldZoom = zoom;
+    zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom + delta));
+
+    // 마우스 위치 기준 줌
+    const rect = canvas.getBoundingClientRect();
+    const sx = e.clientX - rect.left;
+    const sy = e.clientY - rect.top;
+    const worldBefore = {
+        x: (sx - canvas.width / 2) / oldZoom + camera.x,
+        y: (sy - canvas.height / 2) / oldZoom + camera.y
+    };
+    const worldAfter = {
+        x: (sx - canvas.width / 2) / zoom + camera.x,
+        y: (sy - canvas.height / 2) / zoom + camera.y
+    };
+    camera.x += worldBefore.x - worldAfter.x;
+    camera.y += worldBefore.y - worldAfter.y;
+
+    document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
+    render();
+}
+
+// ============================================================
+// 렌더링
+// ============================================================
+function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    drawGrid();
+    drawEdges();
+    drawConnectingLine();
+    drawNodes();
+}
+
+function drawGrid() {
+    const gridSize = 50;
+    ctx.strokeStyle = '#1a1a2e';
+    ctx.lineWidth = 1;
+
+    const topLeft = screenToWorld(0, 0);
+    const bottomRight = screenToWorld(canvas.width, canvas.height);
+
+    const startX = Math.floor(topLeft.x / gridSize) * gridSize;
+    const startY = Math.floor(topLeft.y / gridSize) * gridSize;
+
+    ctx.beginPath();
+    for (let x = startX; x <= bottomRight.x; x += gridSize) {
+        const s = worldToScreen(x, 0);
+        ctx.moveTo(s.x, 0);
+        ctx.lineTo(s.x, canvas.height);
+    }
+    for (let y = startY; y <= bottomRight.y; y += gridSize) {
+        const s = worldToScreen(0, y);
+        ctx.moveTo(0, s.y);
+        ctx.lineTo(canvas.width, s.y);
+    }
+    ctx.stroke();
+
+    // 원점 십자
+    ctx.strokeStyle = '#2a2a4e';
+    ctx.lineWidth = 1.5;
+    const ox = worldToScreen(0, 0);
+    ctx.beginPath();
+    ctx.moveTo(ox.x, 0); ctx.lineTo(ox.x, canvas.height);
+    ctx.moveTo(0, ox.y); ctx.lineTo(canvas.width, ox.y);
+    ctx.stroke();
+
+    // 게임 월드맵 표시 영역 (800x450, 제목바 30px 제외)
+    const MAP_W = 800, MAP_H = 450;
+    const tl = worldToScreen(0, 0);
+    const br = worldToScreen(MAP_W, MAP_H);
+    const rw = br.x - tl.x;
+    const rh = br.y - tl.y;
+
+    ctx.fillStyle = 'rgba(200, 168, 112, 0.05)';
+    ctx.fillRect(tl.x, tl.y, rw, rh);
+
+    ctx.strokeStyle = '#c8a870';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.strokeRect(tl.x, tl.y, rw, rh);
+    ctx.setLineDash([]);
+
+    ctx.font = `bold ${Math.max(10, 12 * zoom)}px sans-serif`;
+    ctx.fillStyle = '#c8a870';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('게임 월드맵 영역 (800×450)', tl.x + 6, tl.y - 4);
+    ctx.textBaseline = 'alphabetic';
+}
+
+function drawEdges() {
+    for (const edge of edges) {
+        const [a, b] = edge;
+        const na = nodes.find(n => n.id === a);
+        const nb = nodes.find(n => n.id === b);
+        if (!na || !nb) continue;
+
+        const sa = worldToScreen(na.x, na.y);
+        const sb = worldToScreen(nb.x, nb.y);
+
+        const isSelected = selectedEdge === edge;
+        ctx.strokeStyle = isSelected ? '#e94560' : '#556';
+        ctx.lineWidth = isSelected ? 3 : 2;
+        ctx.setLineDash(isSelected ? [6, 3] : []);
+        ctx.beginPath();
+        ctx.moveTo(sa.x, sa.y);
+        ctx.lineTo(sb.x, sb.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 엣지 중간에 화살표/마커
+        const mx = (sa.x + sb.x) / 2;
+        const my = (sa.y + sb.y) / 2;
+        ctx.fillStyle = isSelected ? '#e94560' : '#556';
+        ctx.beginPath();
+        ctx.arc(mx, my, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function drawConnectingLine() {
+    if (!isConnecting || !connectSource || !connectMousePos) return;
+    const sa = worldToScreen(connectSource.x, connectSource.y);
+    ctx.strokeStyle = '#e94560';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(sa.x, sa.y);
+    ctx.lineTo(connectMousePos.x, connectMousePos.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+}
+
+// 노드 모양 패스 생성 (타입별 분기)
+function buildNodePath(ctx, sx, sy, r, type) {
+    ctx.beginPath();
+    if (type === 'dungeon') {
+        // 다이아몬드 (마름모)
+        ctx.moveTo(sx, sy - r);
+        ctx.lineTo(sx + r, sy);
+        ctx.lineTo(sx, sy + r);
+        ctx.lineTo(sx - r, sy);
+        ctx.closePath();
+    } else if (type === 'stage') {
+        // 둥근 사각형
+        const hw = r * 0.85;
+        const hh = r * 0.85;
+        const cr = r * 0.25;
+        ctx.moveTo(sx - hw + cr, sy - hh);
+        ctx.lineTo(sx + hw - cr, sy - hh);
+        ctx.quadraticCurveTo(sx + hw, sy - hh, sx + hw, sy - hh + cr);
+        ctx.lineTo(sx + hw, sy + hh - cr);
+        ctx.quadraticCurveTo(sx + hw, sy + hh, sx + hw - cr, sy + hh);
+        ctx.lineTo(sx - hw + cr, sy + hh);
+        ctx.quadraticCurveTo(sx - hw, sy + hh, sx - hw, sy + hh - cr);
+        ctx.lineTo(sx - hw, sy - hh + cr);
+        ctx.quadraticCurveTo(sx - hw, sy - hh, sx - hw + cr, sy - hh);
+        ctx.closePath();
+    } else {
+        // lobby — 원형 (기본)
+        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+    }
+}
+
+function drawNodes() {
+    for (const node of nodes) {
+        const s = worldToScreen(node.x, node.y);
+        const r = NODE_RADIUS * zoom;
+        const isSelected = selectedNode === node;
+        const type = node.type || 'stage';
+
+        // 외곽 글로우
+        if (isSelected) {
+            ctx.shadowColor = '#e94560';
+            ctx.shadowBlur = 15;
+        }
+
+        // 노드 모양
+        const color = node.color || '#4CAF50';
+        const grad = ctx.createRadialGradient(s.x, s.y - r * 0.2, 0, s.x, s.y, r);
+        grad.addColorStop(0, lightenColor(color, 40));
+        grad.addColorStop(1, color);
+        ctx.fillStyle = grad;
+        buildNodePath(ctx, s.x, s.y, r, type);
+        ctx.fill();
+
+        // 테두리
+        ctx.strokeStyle = isSelected ? '#e94560' : lightenColor(color, 60);
+        ctx.lineWidth = isSelected ? 3 : 2;
+        ctx.stroke();
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+
+        // 아이콘
+        drawWorldMapIcon(ctx, s.x, s.y - 2 * zoom, node.icon || 'field', true, zoom);
+
+        // 라벨
+        ctx.font = `bold ${Math.max(10, 11 * zoom)}px 'MaplestoryOTFBold', sans-serif`;
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(node.label || node.id, s.x, s.y + r + 4);
+
+        // ID (작게)
+        ctx.font = `${Math.max(8, 9 * zoom)}px sans-serif`;
+        ctx.fillStyle = '#888';
+        ctx.fillText(node.id, s.x, s.y + r + 4 + Math.max(12, 13 * zoom));
+
+        // 타입 뱃지
+        ctx.font = `${Math.max(7, 8 * zoom)}px sans-serif`;
+        ctx.fillStyle = type === 'dungeon' ? '#ff6b6b' : type === 'lobby' ? '#69db7c' : '#74c0fc';
+        ctx.fillText(type.toUpperCase(), s.x, s.y + r + 4 + Math.max(12, 13 * zoom) + Math.max(10, 11 * zoom));
+
+        // reqLevel 뱃지
+        if (node.reqLevel > 0) {
+            const badgeX = s.x + r * 0.7;
+            const badgeY = s.y - r * 0.7;
+            ctx.fillStyle = '#e94560';
+            ctx.beginPath();
+            ctx.arc(badgeX, badgeY, 9 * zoom, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = `bold ${Math.max(8, 9 * zoom)}px sans-serif`;
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Lv' + node.reqLevel, badgeX, badgeY);
+        }
+    }
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+}
+
+// 아이콘 그리기 (game.js 참조)
+function drawWorldMapIcon(ctx, cx, cy, icon, unlocked, s) {
+    s = s || 1;
+    ctx.save();
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5 * s;
+
+    if (icon === 'town') {
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 12 * s);
+        ctx.lineTo(cx + 10 * s, cy - 2 * s);
+        ctx.lineTo(cx + 7 * s, cy - 2 * s);
+        ctx.lineTo(cx + 7 * s, cy + 8 * s);
+        ctx.lineTo(cx - 7 * s, cy + 8 * s);
+        ctx.lineTo(cx - 7 * s, cy - 2 * s);
+        ctx.lineTo(cx - 10 * s, cy - 2 * s);
+        ctx.closePath();
+        ctx.fill();
+    } else if (icon === 'field') {
+        ctx.beginPath();
+        ctx.arc(cx, cy - 6 * s, 8 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(cx - 2 * s, cy + 2 * s, 4 * s, 8 * s);
+    } else if (icon === 'cave') {
+        ctx.beginPath();
+        ctx.arc(cx, cy, 10 * s, Math.PI, 0);
+        ctx.lineTo(cx + 10 * s, cy + 6 * s);
+        ctx.lineTo(cx - 10 * s, cy + 6 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#333';
+        ctx.beginPath();
+        ctx.arc(cx, cy + 2 * s, 5 * s, Math.PI, 0);
+        ctx.lineTo(cx + 5 * s, cy + 6 * s);
+        ctx.lineTo(cx - 5 * s, cy + 6 * s);
+        ctx.closePath();
+        ctx.fill();
+    } else if (icon === 'desert') {
+        ctx.fillRect(cx - 2 * s, cy - 8 * s, 4 * s, 16 * s);
+        ctx.fillRect(cx + 2 * s, cy - 4 * s, 6 * s, 3 * s);
+        ctx.fillRect(cx + 5 * s, cy - 4 * s, 3 * s, -6 * s);
+        ctx.fillRect(cx - 8 * s, cy, 6 * s, 3 * s);
+        ctx.fillRect(cx - 8 * s, cy, 3 * s, -5 * s);
+    } else if (icon === 'forest') {
+        // 소나무
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 10 * s);
+        ctx.lineTo(cx + 8 * s, cy + 2 * s);
+        ctx.lineTo(cx - 8 * s, cy + 2 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillRect(cx - 2 * s, cy + 2 * s, 4 * s, 6 * s);
+    } else if (icon === 'volcano') {
+        ctx.beginPath();
+        ctx.moveTo(cx - 10 * s, cy + 8 * s);
+        ctx.lineTo(cx - 4 * s, cy - 6 * s);
+        ctx.lineTo(cx, cy - 3 * s);
+        ctx.lineTo(cx + 4 * s, cy - 6 * s);
+        ctx.lineTo(cx + 10 * s, cy + 8 * s);
+        ctx.closePath();
+        ctx.fill();
+    } else if (icon === 'snow') {
+        // 눈결정
+        ctx.lineWidth = 2 * s;
+        for (let i = 0; i < 3; i++) {
+            const angle = (i * 60) * Math.PI / 180;
+            ctx.beginPath();
+            ctx.moveTo(cx - Math.cos(angle) * 8 * s, cy - Math.sin(angle) * 8 * s);
+            ctx.lineTo(cx + Math.cos(angle) * 8 * s, cy + Math.sin(angle) * 8 * s);
+            ctx.stroke();
+        }
+    } else if (icon === 'castle') {
+        ctx.fillRect(cx - 8 * s, cy - 4 * s, 16 * s, 12 * s);
+        ctx.fillRect(cx - 10 * s, cy - 8 * s, 4 * s, 4 * s);
+        ctx.fillRect(cx - 2 * s, cy - 8 * s, 4 * s, 4 * s);
+        ctx.fillRect(cx + 6 * s, cy - 8 * s, 4 * s, 4 * s);
+    }
+    ctx.restore();
+}
+
+function lightenColor(hex, amount) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.min(255, (num >> 16) + amount);
+    const g = Math.min(255, ((num >> 8) & 0xFF) + amount);
+    const b = Math.min(255, (num & 0xFF) + amount);
+    return `rgb(${r},${g},${b})`;
+}
+
+// ============================================================
+// 노드/엣지 조작
+// ============================================================
+function addNode(id, x, y, label, color, icon, reqLevel, monsters, type) {
+    const nodeId = id || generateNodeId();
+    const nodeLabel = label || nodeId;
+    nodes.push({
+        id: nodeId,
+        x: x || 0,
+        y: y || 0,
+        label: nodeLabel,
+        type: type || 'stage',
+        reqLevel: reqLevel || 0,
+        color: color || '#4CAF50',
+        icon: icon || 'field',
+        monsters: monsters || []
+    });
+    // stageDataMap에 없으면 기본 Stage JSON 템플릿 생성
+    if (!stageDataMap[nodeId]) {
+        stageDataMap[nodeId] = {
+            number: nodes.length - 1,
+            displayName: nodeLabel,
+            playerStart: { x: 100, y: 710 },
+            platforms: [
+                { x: 50, y: 690, width: 200, height: 30 }
+            ],
+            monsters: [],
+            items: [],
+            portals: [],
+            spawners: [],
+            background: {
+                skyTop: color || '#4CAF50',
+                skyBottom: lightenColor(color || '#4CAF50', 60),
+                mountains: []
+            }
+        };
+    }
+    updateStatus();
+}
+
+function generateNodeId() {
+    const existing = new Set(nodes.map(n => n.id));
+    for (let i = 1; i < 1000; i++) {
+        const id = 'Stage' + String(i).padStart(3, '0');
+        if (!existing.has(id)) return id;
+    }
+    return 'Stage_' + Date.now();
+}
+
+function addEdge(a, b) {
+    edges.push([a, b]);
+    // 포탈 자동 생성
+    autoCreatePortals(a, b);
+    updateStatus();
+    updatePropPanel();
+    render();
+}
+
+function deleteNode(id) {
+    // 연결된 엣지 제거 (포탈도 함께)
+    const connectedEdges = edges.filter(([a, b]) => a === id || b === id);
+    for (const edge of connectedEdges) {
+        deleteEdge(edge, true);
+    }
+    nodes = nodes.filter(n => n.id !== id);
+    if (selectedNode && selectedNode.id === id) selectedNode = null;
+    updatePropPanel();
+    updateStatus();
+}
+
+function copyNode() {
+    if (!selectedNode) return;
+    const n = selectedNode;
+    clipboardNode = {
+        label: n.label,
+        type: n.type || 'stage',
+        reqLevel: n.reqLevel || 0,
+        color: n.color || '#4CAF50',
+        icon: n.icon || 'field',
+        monsters: [...(n.monsters || [])],
+        stageData: stageDataMap[n.id] ? JSON.parse(JSON.stringify(stageDataMap[n.id])) : null
+    };
+    // 포탈 제외
+    if (clipboardNode.stageData) {
+        clipboardNode.stageData.portals = [];
+    }
+    showToast('노드 복사됨: ' + (n.label || n.id));
+}
+
+function pasteNode() {
+    if (!clipboardNode) return;
+    saveState();
+    const newId = generateNodeId();
+    addNode(
+        newId,
+        camera.x,
+        camera.y,
+        clipboardNode.label + ' (복사)',
+        clipboardNode.color,
+        clipboardNode.icon,
+        clipboardNode.reqLevel,
+        [...clipboardNode.monsters],
+        clipboardNode.type
+    );
+    // stageData 복사 (포탈 제외 상태)
+    if (clipboardNode.stageData) {
+        const copied = JSON.parse(JSON.stringify(clipboardNode.stageData));
+        copied.displayName = clipboardNode.label + ' (복사)';
+        copied.number = nodes.length - 1;
+        stageDataMap[newId] = copied;
+    }
+    selectedNode = nodes[nodes.length - 1];
+    selectedEdge = null;
+    updatePropPanel();
+    render();
+    showToast('노드 붙여넣기 완료: ' + newId);
+}
+
+function deleteEdge(edge, skipRender) {
+    const [a, b] = edge;
+    // 포탈 자동 제거
+    autoRemovePortals(a, b);
+    edges = edges.filter(e => e !== edge);
+    if (selectedEdge === edge) selectedEdge = null;
+    if (!skipRender) {
+        updatePropPanel();
+        updateStatus();
+        render();
+    }
+}
+
+// ============================================================
+// 포탈 자동 생성/제거
+// ============================================================
+function autoCreatePortals(stageA, stageB) {
+    createPortalIfNeeded(stageA, stageB);
+    createPortalIfNeeded(stageB, stageA);
+}
+
+function createPortalIfNeeded(fromId, toId) {
+    // stageDataMap에 없으면 기본 템플릿 생성
+    if (!stageDataMap[fromId]) {
+        const fromNode = nodes.find(n => n.id === fromId);
+        stageDataMap[fromId] = {
+            number: nodes.indexOf(fromNode) >= 0 ? nodes.indexOf(fromNode) : 0,
+            displayName: fromNode ? fromNode.label : fromId,
+            playerStart: { x: 100, y: 710 },
+            platforms: [{ x: 50, y: 690, width: 200, height: 30 }],
+            monsters: [],
+            items: [],
+            portals: [],
+            spawners: [],
+            background: {
+                skyTop: fromNode?.color || '#87CEEB',
+                skyBottom: lightenColor(fromNode?.color || '#87CEEB', 60),
+                mountains: []
+            }
+        };
+    }
+    const data = stageDataMap[fromId];
+    if (!data.portals) data.portals = [];
+
+    // 이미 해당 target으로의 포탈 존재하면 스킵
+    const exists = data.portals.some(p => p.targetStage === toId);
+    if (exists) return;
+
+    // 위치 자동 계산: 플랫폼 기반
+    const pos = calcPortalPosition(data, fromId, toId);
+    const toNode = nodes.find(n => n.id === toId);
+
+    data.portals.push({
+        x: pos.x,
+        y: pos.y,
+        targetStage: toId,
+        label: toNode ? toNode.label : toId
+    });
+}
+
+function calcPortalPosition(stageData, fromId, toId) {
+    const platforms = stageData.platforms || [];
+    if (platforms.length === 0) return { x: 200, y: 400 };
+
+    // fromNode와 toNode의 월드맵상 상대 위치로 좌/우 결정
+    const fromNode = nodes.find(n => n.id === fromId);
+    const toNode = nodes.find(n => n.id === toId);
+
+    let useRight = true;
+    if (fromNode && toNode) {
+        useRight = toNode.x >= fromNode.x;
+    }
+
+    // 같은 방향에 이미 배치된 포탈 수 계산 (겹침 방지)
+    const existingPortals = stageData.portals || [];
+    let sameSideCount = 0;
+    for (const p of existingPortals) {
+        const tn = nodes.find(n => n.id === p.targetStage);
+        if (!tn || !fromNode) continue;
+        if ((tn.x >= fromNode.x) === useRight) sameSideCount++;
+    }
+
+    // 플랫폼을 방향별로 정렬 (오른쪽→오른쪽 끝 우선, 왼쪽→왼쪽 끝 우선)
+    const sorted = [...platforms].sort((a, b) =>
+        useRight ? (b.x + b.width) - (a.x + a.width) : a.x - b.x
+    );
+
+    // 여러 플랫폼이 있으면 분산 배치, 부족하면 같은 플랫폼에서 간격 오프셋
+    const platIdx = Math.min(sameSideCount, sorted.length - 1);
+    const plat = sorted[platIdx];
+    const SPACING = 80;
+    const offsetCount = Math.max(0, sameSideCount - platIdx);
+
+    if (useRight) {
+        return { x: plat.x + plat.width - 30 - offsetCount * SPACING, y: plat.y - 64 };
+    } else {
+        return { x: plat.x + 30 + offsetCount * SPACING, y: plat.y - 64 };
+    }
+}
+
+function autoRemovePortals(stageA, stageB) {
+    removePortalFromStage(stageA, stageB);
+    removePortalFromStage(stageB, stageA);
+}
+
+function removePortalFromStage(fromId, toId) {
+    if (!stageDataMap[fromId]) return;
+    const data = stageDataMap[fromId];
+    if (!data.portals) return;
+    data.portals = data.portals.filter(p => p.targetStage !== toId);
+}
+
+// ============================================================
+// 속성 패널
+// ============================================================
+function updatePropPanel() {
+    const panel = document.getElementById('propContent');
+
+    if (selectedNode) {
+        const n = selectedNode;
+        const portals = stageDataMap[n.id] ? (stageDataMap[n.id].portals || []) : [];
+
+        let portalHTML = '';
+        for (const p of portals) {
+            portalHTML += `<div class="portal-item">
+                <div class="portal-info">→ ${p.targetStage} (${p.x}, ${p.y})</div>
+            </div>`;
+        }
+
+        panel.innerHTML = `
+            <h3 style="color:#e94560; margin-bottom:10px;">노드 속성</h3>
+            <div class="prop-group">
+                <label>ID</label>
+                <input type="text" id="propId" value="${n.id}" />
+            </div>
+            <div class="prop-group">
+                <label>타입</label>
+                <select id="propType">
+                    ${NODE_TYPES.map(t => `<option value="${t}" ${(n.type || 'stage') === t ? 'selected' : ''}>${t.toUpperCase()}</option>`).join('')}
+                </select>
+            </div>
+            <div class="prop-group">
+                <label>라벨</label>
+                <input type="text" id="propLabel" value="${n.label || ''}" />
+            </div>
+            <div class="prop-row">
+                <div class="prop-group">
+                    <label>X</label>
+                    <input type="number" id="propX" value="${n.x}" />
+                </div>
+                <div class="prop-group">
+                    <label>Y</label>
+                    <input type="number" id="propY" value="${n.y}" />
+                </div>
+            </div>
+            <div class="prop-row">
+                <div class="prop-group">
+                    <label>요구 레벨</label>
+                    <input type="number" id="propReqLevel" value="${n.reqLevel || 0}" min="0" />
+                </div>
+                <div class="prop-group">
+                    <label>아이콘</label>
+                    <select id="propIcon">
+                        ${ICON_TYPES.map(t => `<option value="${t}" ${n.icon === t ? 'selected' : ''}>${t}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            <div class="prop-group">
+                <label>색상</label>
+                <input type="color" id="propColor" value="${n.color || '#4CAF50'}" />
+            </div>
+            <div class="prop-group">
+                <label>몬스터 (쉼표 구분)</label>
+                <input type="text" id="propMonsters" value="${(n.monsters || []).join(', ')}" />
+            </div>
+            <hr style="border-color:#0f3460; margin:12px 0;" />
+            <h3 style="color:#e94560; margin-bottom:8px;">포탈 (${portals.length})</h3>
+            <div class="portal-list">${portalHTML || '<p style="color:#666;font-size:11px;">포탈 없음</p>'}</div>
+            <hr style="border-color:#0f3460; margin:12px 0;" />
+            <h3 style="color:#e94560; margin-bottom:8px;">레벨</h3>
+            ${stageDataMap[n.id]
+                ? `<p style="font-size:11px;color:#aaa;margin-bottom:8px;">플랫폼 ${(stageDataMap[n.id].platforms||[]).length}개 · 몬스터 ${(stageDataMap[n.id].monsters||[]).length}개 · 아이템 ${(stageDataMap[n.id].items||[]).length}개</p>`
+                : '<p style="font-size:11px;color:#666;margin-bottom:8px;">Stage 데이터 없음</p>'
+            }
+            <button id="btnOpenEditor" style="width:100%;padding:8px;border:none;border-radius:4px;background:#0f3460;color:#fff;cursor:pointer;font-weight:bold;font-size:12px;transition:background 0.2s;" onmouseover="this.style.background='#1a4a7a'" onmouseout="this.style.background='#0f3460'">🛠 편집하기</button>
+        `;
+
+        // 이벤트 바인딩
+        const bindInput = (elemId, prop, transform) => {
+            const el = document.getElementById(elemId);
+            if (!el) return;
+            el.addEventListener('change', () => {
+                saveState();
+                const val = transform ? transform(el.value) : el.value;
+                if (prop === 'id') {
+                    // ID 변경 시 edges와 portals도 업데이트
+                    const oldId = n.id;
+                    n.id = val;
+                    edges.forEach(e => {
+                        if (e[0] === oldId) e[0] = val;
+                        if (e[1] === oldId) e[1] = val;
+                    });
+                    // stageDataMap 키 변경
+                    if (stageDataMap[oldId]) {
+                        stageDataMap[val] = stageDataMap[oldId];
+                        delete stageDataMap[oldId];
+                    }
+                    // stageFileHandles 키 변경 + 옛 파일 삭제
+                    if (stageFileHandles[oldId]) {
+                        delete stageFileHandles[oldId];
+                    }
+                    if (folderHandle) {
+                        folderHandle.removeEntry(oldId + '.json').catch(() => {});
+                    }
+                    // 다른 스테이지의 포탈 target과 label도 업데이트
+                    for (const [sid, sd] of Object.entries(stageDataMap)) {
+                        if (sd.portals) {
+                            sd.portals.forEach(p => {
+                                if (p.targetStage === oldId) {
+                                    p.targetStage = val;
+                                    if (n.label) p.label = n.label;
+                                }
+                            });
+                        }
+                    }
+                } else if (prop === 'label') {
+                    n.label = val;
+                    if (stageDataMap[n.id]) stageDataMap[n.id].displayName = val;
+                    // 다른 스테이지 포탈의 label도 동기화
+                    for (const [sid, sd] of Object.entries(stageDataMap)) {
+                        if (sd.portals) {
+                            sd.portals.forEach(p => {
+                                if (p.targetStage === n.id) p.label = val;
+                            });
+                        }
+                    }
+                } else if (prop === 'color') {
+                    n.color = val;
+                    if (stageDataMap[n.id]) {
+                        const bg = stageDataMap[n.id].background;
+                        if (bg) {
+                            bg.skyTop = val;
+                            bg.skyBottom = lightenColor(val, 60);
+                        }
+                    }
+                } else if (prop === 'monsters') {
+                    n.monsters = el.value.split(',').map(s => s.trim()).filter(Boolean);
+                } else {
+                    n[prop] = val;
+                }
+                render();
+                updateStatus();
+            });
+        };
+
+        bindInput('propId', 'id');
+        bindInput('propType', 'type');
+        bindInput('propLabel', 'label');
+        bindInput('propX', 'x', v => parseInt(v) || 0);
+        bindInput('propY', 'y', v => parseInt(v) || 0);
+        bindInput('propReqLevel', 'reqLevel', v => parseInt(v) || 0);
+        bindInput('propIcon', 'icon');
+        bindInput('propColor', 'color');
+        bindInput('propMonsters', 'monsters');
+
+        // 편집하기 버튼
+        const editorBtn = document.getElementById('btnOpenEditor');
+        if (editorBtn) {
+            editorBtn.addEventListener('click', () => {
+                switchToLevelEditor(n.id);
+            });
+        }
+
+    } else if (selectedEdge) {
+        const [a, b] = selectedEdge;
+        const na = nodes.find(n => n.id === a);
+        const nb = nodes.find(n => n.id === b);
+
+        // 양쪽 포탈 정보
+        const portalAtoB = stageDataMap[a]?.portals?.find(p => p.targetStage === b);
+        const portalBtoA = stageDataMap[b]?.portals?.find(p => p.targetStage === a);
+
+        panel.innerHTML = `
+            <h3 style="color:#e94560; margin-bottom:10px;">엣지 속성</h3>
+            <div class="prop-group">
+                <label>연결</label>
+                <p style="font-size:13px;">${na?.label || a} ↔ ${nb?.label || b}</p>
+            </div>
+            <hr style="border-color:#0f3460; margin:12px 0;" />
+            <h3 style="color:#e94560; margin-bottom:8px;">포탈: ${a} → ${b}</h3>
+            ${portalAtoB ? `
+                <div class="prop-row">
+                    <div class="prop-group">
+                        <label>X</label>
+                        <input type="number" id="portalAtoBX" value="${portalAtoB.x}" />
+                    </div>
+                    <div class="prop-group">
+                        <label>Y</label>
+                        <input type="number" id="portalAtoBY" value="${portalAtoB.y}" />
+                    </div>
+                </div>
+            ` : '<p style="color:#666;font-size:11px;">포탈 없음 (Stage 데이터 없음)</p>'}
+            <hr style="border-color:#0f3460; margin:12px 0;" />
+            <h3 style="color:#e94560; margin-bottom:8px;">포탈: ${b} → ${a}</h3>
+            ${portalBtoA ? `
+                <div class="prop-row">
+                    <div class="prop-group">
+                        <label>X</label>
+                        <input type="number" id="portalBtoAX" value="${portalBtoA.x}" />
+                    </div>
+                    <div class="prop-group">
+                        <label>Y</label>
+                        <input type="number" id="portalBtoAY" value="${portalBtoA.y}" />
+                    </div>
+                </div>
+            ` : '<p style="color:#666;font-size:11px;">포탈 없음 (Stage 데이터 없음)</p>'}
+            <hr style="border-color:#0f3460; margin:12px 0;" />
+            <button class="primary" style="width:100%;padding:8px;border:none;border-radius:4px;background:#e94560;color:#fff;cursor:pointer;font-weight:bold;" id="btnDeleteEdge">🗑 엣지 삭제</button>
+        `;
+
+        // 포탈 좌표 편집 바인딩
+        if (portalAtoB) {
+            const xEl = document.getElementById('portalAtoBX');
+            const yEl = document.getElementById('portalAtoBY');
+            if (xEl) xEl.addEventListener('change', () => { saveState(); portalAtoB.x = parseInt(xEl.value) || 0; });
+            if (yEl) yEl.addEventListener('change', () => { saveState(); portalAtoB.y = parseInt(yEl.value) || 0; });
+        }
+        if (portalBtoA) {
+            const xEl = document.getElementById('portalBtoAX');
+            const yEl = document.getElementById('portalBtoAY');
+            if (xEl) xEl.addEventListener('change', () => { saveState(); portalBtoA.x = parseInt(xEl.value) || 0; });
+            if (yEl) yEl.addEventListener('change', () => { saveState(); portalBtoA.y = parseInt(yEl.value) || 0; });
+        }
+
+        const delBtn = document.getElementById('btnDeleteEdge');
+        if (delBtn) {
+            delBtn.addEventListener('click', () => {
+                saveState();
+                deleteEdge(selectedEdge);
+                render();
+            });
+        }
+
+    } else {
+        panel.innerHTML = '<p style="color:#666; font-size:12px;">노드 또는 엣지를 선택하세요</p>';
+    }
+}
+
+// ============================================================
+// 도구 패널
+// ============================================================
+function setupToolPanel() {
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentTool = btn.dataset.tool;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            canvas.style.cursor = 'default';
+        });
+    });
+}
+
+// ============================================================
+// 툴바 버튼
+// ============================================================
+function setupToolbar() {
+    document.getElementById('btnSelectFolder').addEventListener('click', loadStageFolder);
+    document.getElementById('btnLoadGameJs').addEventListener('click', loadGameJs);
+    document.getElementById('btnAddNode').addEventListener('click', () => {
+        saveState();
+        const id = generateNodeId();
+        addNode(id, camera.x, camera.y);
+        selectedNode = nodes[nodes.length - 1];
+        selectedEdge = null;
+        updatePropPanel();
+        render();
+    });
+    document.getElementById('btnExport').addEventListener('click', showExportModal);
+    document.getElementById('btnSaveStages').addEventListener('click', saveStageFiles);
+    document.getElementById('btnPatchGameJs').addEventListener('click', patchGameJs);
+    document.getElementById('btnUndo').addEventListener('click', undo);
+    document.getElementById('btnRedo').addEventListener('click', redo);
+
+    document.getElementById('btnZoomIn').addEventListener('click', () => {
+        if (currentView === 'worldmap') {
+            zoom = Math.min(ZOOM_MAX, zoom + ZOOM_STEP);
+            document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
+            render();
+        } else {
+            if (leZoom < 2) leZoom = Math.min(2, leZoom + 0.1);
+            document.getElementById('zoomLabel').textContent = Math.round(leZoom * 100) + '%';
+            canvas.width = LE_WORLD_WIDTH * leZoom; canvas.height = LE_WORLD_HEIGHT * leZoom;
+            leRender();
+        }
+    });
+    document.getElementById('btnZoomOut').addEventListener('click', () => {
+        if (currentView === 'worldmap') {
+            zoom = Math.max(ZOOM_MIN, zoom - ZOOM_STEP);
+            document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
+            render();
+        } else {
+            if (leZoom > 0.3) leZoom = Math.max(0.3, leZoom - 0.1);
+            document.getElementById('zoomLabel').textContent = Math.round(leZoom * 100) + '%';
+            canvas.width = LE_WORLD_WIDTH * leZoom; canvas.height = LE_WORLD_HEIGHT * leZoom;
+            leRender();
+        }
+    });
+    document.getElementById('btnZoomReset').addEventListener('click', () => {
+        if (currentView === 'worldmap') {
+            zoom = 1; camera = { x: 400, y: 225 };
+            document.getElementById('zoomLabel').textContent = '100%';
+            render();
+        } else {
+            leZoom = 1;
+            document.getElementById('zoomLabel').textContent = '100%';
+            canvas.width = LE_WORLD_WIDTH * leZoom; canvas.height = LE_WORLD_HEIGHT * leZoom;
+            leRender();
+        }
+    });
+
+    document.getElementById('btnCopyCode').addEventListener('click', () => {
+        const code = document.getElementById('exportCode').value;
+        navigator.clipboard.writeText(code).then(() => {
+            document.getElementById('btnCopyCode').textContent = '✅ 복사 완료!';
+            setTimeout(() => {
+                document.getElementById('btnCopyCode').textContent = '📋 클립보드 복사';
+            }, 2000);
+        });
+    });
+    document.getElementById('btnCloseExport').addEventListener('click', () => {
+        document.getElementById('exportModal').classList.remove('show');
+    });
+}
+
+// ============================================================
+// 키보드 단축키
+// ============================================================
+function setupKeyboard() {
+    document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+
+        if (currentView === 'leveleditor') {
+            leOnKeyDown(e);
+            return;
+        }
+
+        // 월드맵 키보드
+        if ((e.key === 'v' || e.key === 'V') && !e.ctrlKey) { setTool('select'); }
+        if (e.key === 'c' && !e.ctrlKey) { setTool('connect'); }
+        if (e.key === 'd' || e.key === 'D') { setTool('delete'); }
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (selectedNode) { saveState(); deleteNode(selectedNode.id); render(); }
+            else if (selectedEdge) { saveState(); deleteEdge(selectedEdge); render(); }
+        }
+        if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+        if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+        if (e.ctrlKey && e.key === 'c') { e.preventDefault(); copyNode(); }
+        if (e.ctrlKey && e.key === 'v') { e.preventDefault(); pasteNode(); }
+        if (e.key === 'Escape') {
+            selectedNode = null;
+            selectedEdge = null;
+            isConnecting = false;
+            connectSource = null;
+            updatePropPanel();
+            render();
+        }
+    });
+}
+
+function setTool(tool) {
+    currentTool = tool;
+    document.querySelectorAll('.tool-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tool === tool);
+    });
+}
+
+// ============================================================
+// Import: Stage 폴더 로드
+// ============================================================
+async function loadStageFolder() {
+    try {
+        const rootHandle = await window.showDirectoryPicker({ id: 'stageFolder', mode: 'readwrite' });
+        stageDataMap = {};
+        stageFileHandles = {};
+
+        // 선택한 폴더에서 Stage 하위 폴더와 game.js 탐색
+        let stageDirHandle = null;
+        let gjsHandle = null;
+
+        for await (const entry of rootHandle.values()) {
+            if (entry.kind === 'directory' && entry.name === 'Stage') {
+                stageDirHandle = entry;
+            }
+            if (entry.kind === 'file' && entry.name === 'game.js') {
+                gjsHandle = entry;
+                gamejsHandle = entry;
+            }
+        }
+
+        // Stage 하위폴더가 없으면 선택한 폴더 자체를 Stage 폴더로 사용
+        const stageDir = stageDirHandle || rootHandle;
+        folderHandle = stageDir;
+
+        for await (const entry of stageDir.values()) {
+            if (entry.kind === 'file' && entry.name.endsWith('.json')) {
+                const file = await entry.getFile();
+                const text = await file.text();
+                try {
+                    const data = JSON.parse(text);
+                    const id = entry.name.replace('.json', '');
+                    stageDataMap[id] = data;
+                    stageFileHandles[id] = entry;
+                } catch (err) {
+                    console.warn('JSON 파싱 실패:', entry.name, err);
+                }
+            }
+        }
+
+        // game.js에서 worldMapData 파싱하여 노드 좌표/속성 반영
+        let worldMapNodes = null;
+        if (gjsHandle) {
+            try {
+                const gjsFile = await gjsHandle.getFile();
+                const gjsText = await gjsFile.text();
+                const match = gjsText.match(/const\s+worldMapData\s*=\s*(\{[\s\S]*?\n\});/);
+                if (match) {
+                    const parsed = eval('(' + match[1] + ')');
+                    worldMapNodes = {};
+                    for (const n of parsed.nodes) worldMapNodes[n.id] = n;
+                }
+            } catch (e) {
+                console.warn('game.js worldMapData 파싱 실패:', e);
+            }
+        }
+
+        // 기존 노드 없으면 stageDataMap에서 생성
+        if (nodes.length === 0) {
+            buildNodesFromStageData(worldMapNodes);
+        } else {
+            mergeStageData();
+        }
+
+        // 포탈에서 edges 추출
+        rebuildEdgesFromPortals();
+
+        const gjsMsg = worldMapNodes ? ' (game.js 좌표 반영)' : '';
+        setStatus(`${Object.keys(stageDataMap).length}개 스테이지 로드 완료${gjsMsg}`);
+        if (!worldMapNodes) {
+            showToast('⚠️ game.js를 찾지 못했습니다. 프로젝트 루트 폴더(Project03)를 선택하세요.', true);
+        }
+        render();
+    } catch (err) {
+        if (err.name !== 'AbortError') {
+            console.error('폴더 로드 실패:', err);
+            setStatus('폴더 로드 실패: ' + err.message);
+        }
+    }
+}
+
+function buildNodesFromStageData(worldMapNodes) {
+    nodes = [];
+    let i = 0;
+    const spacing = 150;
+    for (const [id, data] of Object.entries(stageDataMap)) {
+        const wn = worldMapNodes && worldMapNodes[id];
+        const col = i % 4;
+        const row = Math.floor(i / 4);
+        addNode(
+            id,
+            wn ? wn.x : col * spacing,
+            wn ? wn.y : row * spacing,
+            wn ? wn.label : (data.displayName || id),
+            wn ? wn.color : '#4CAF50',
+            wn ? wn.icon : 'field',
+            wn ? (wn.reqLevel || 0) : 0,
+            wn ? (wn.monsters || []) : [],
+            wn ? (wn.type || 'stage') : 'stage'
+        );
+        i++;
+    }
+}
+
+function mergeStageData() {
+    // 스테이지 데이터에 있지만 노드에 없는 것들 추가
+    for (const id of Object.keys(stageDataMap)) {
+        if (!nodes.find(n => n.id === id)) {
+            addNode(id, Math.random() * 400, Math.random() * 400, stageDataMap[id].displayName || id);
+        }
+    }
+}
+
+function rebuildEdgesFromPortals() {
+    const edgeSet = new Set();
+    edges = [];
+
+    for (const [id, data] of Object.entries(stageDataMap)) {
+        if (!data.portals) continue;
+        for (const portal of data.portals) {
+            const key = [id, portal.targetStage].sort().join('|');
+            if (!edgeSet.has(key)) {
+                edgeSet.add(key);
+                edges.push([id, portal.targetStage]);
+            }
+        }
+    }
+    updateStatus();
+}
+
+// ============================================================
+// Import: game.js에서 worldMapData 로드
+// ============================================================
+async function loadGameJs() {
+    try {
+        const [fileHandle] = await window.showOpenFilePicker({
+            types: [{ description: 'JavaScript', accept: { 'text/javascript': ['.js'] } }]
+        });
+        gamejsHandle = fileHandle;
+        const file = await fileHandle.getFile();
+        const text = await file.text();
+
+        // worldMapData 파싱
+        const match = text.match(/const\s+worldMapData\s*=\s*(\{[\s\S]*?\n\});/);
+        if (!match) {
+            setStatus('game.js에서 worldMapData를 찾을 수 없습니다');
+            return;
+        }
+
+        // eval로 파싱 (안전한 로컬 도구)
+        const worldMapData = eval('(' + match[1] + ')');
+
+        // 노드/엣지 적용
+        saveState();
+        nodes = worldMapData.nodes.map(n => ({ ...n }));
+        edges = worldMapData.edges.map(e => [...e]);
+
+        updateStatus();
+        setStatus('game.js에서 worldMapData 로드 완료 (' + nodes.length + ' 노드, ' + edges.length + ' 엣지)');
+        render();
+    } catch (err) {
+        if (err.name !== 'AbortError') {
+            console.error('game.js 로드 실패:', err);
+            setStatus('game.js 로드 실패: ' + err.message);
+        }
+    }
+}
+
+// ============================================================
+// Export: worldMapData 코드 생성
+// ============================================================
+function generateWorldMapCode() {
+    let code = 'const worldMapData = {\n    nodes: [\n';
+
+    for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        let parts = [];
+        parts.push(`id: "${n.id}"`);
+        parts.push(`x: ${n.x}`);
+        parts.push(`y: ${n.y}`);
+        parts.push(`label: "${n.label}"`);
+        parts.push(`type: '${n.type || 'stage'}'`);
+        parts.push(`reqLevel: ${n.reqLevel || 0}`);
+        parts.push(`color: '${n.color || '#4CAF50'}'`);
+        parts.push(`icon: '${n.icon || 'field'}'`);
+        if (n.monsters && n.monsters.length > 0) {
+            parts.push(`monsters: [${n.monsters.map(m => `"${m}"`).join(', ')}]`);
+        }
+        code += '        { ' + parts.join(', ') + ' }';
+        if (i < nodes.length - 1) code += ',';
+        code += '\n';
+    }
+
+    code += '    ],\n    edges: [\n';
+
+    for (let i = 0; i < edges.length; i++) {
+        code += `        ["${edges[i][0]}", "${edges[i][1]}"]`;
+        if (i < edges.length - 1) code += ',';
+        code += '\n';
+    }
+
+    code += '    ]\n};';
+    return code;
+}
+
+function showExportModal() {
+    document.getElementById('exportCode').value = generateWorldMapCode();
+    document.getElementById('exportModal').classList.add('show');
+}
+
+// ============================================================
+// Stage JSON 저장
+// ============================================================
+async function saveStageFiles() {
+    if (!folderHandle) {
+        setStatus('먼저 Stage 폴더를 선택해주세요');
+        return;
+    }
+
+    let saved = 0;
+    for (const [id, data] of Object.entries(stageDataMap)) {
+        try {
+            let handle = stageFileHandles[id];
+            if (!handle) {
+                handle = await folderHandle.getFileHandle(id + '.json', { create: true });
+                stageFileHandles[id] = handle;
+            }
+            const writable = await handle.createWritable();
+            await writable.write(JSON.stringify(data, null, 2));
+            await writable.close();
+            saved++;
+        } catch (err) {
+            console.error(`${id}.json 저장 실패:`, err);
+        }
+    }
+
+    setStatus(`${saved}개 Stage JSON 파일 저장 완료`);
+    showToast(`✅ ${saved}개 Stage JSON 파일 저장 완료!`);
+}
+
+// ============================================================
+// game.js 패치
+// ============================================================
+async function patchGameJs() {
+    if (!gamejsHandle) {
+        // 파일 선택
+        try {
+            const [fh] = await window.showOpenFilePicker({
+                types: [{ description: 'JavaScript', accept: { 'text/javascript': ['.js'] } }]
+            });
+            gamejsHandle = fh;
+        } catch (err) {
+            if (err.name !== 'AbortError') setStatus('game.js 선택 실패');
+            return;
+        }
+    }
+
+    try {
+        const file = await gamejsHandle.getFile();
+        let text = await file.text();
+
+        // 1) worldMapData 패치
+        const pattern = /const\s+worldMapData\s*=\s*\{[\s\S]*?\n\};/;
+        if (!pattern.test(text)) {
+            setStatus('game.js에서 worldMapData 블록을 찾을 수 없습니다');
+            return;
+        }
+        const newCode = generateWorldMapCode();
+        text = text.replace(pattern, newCode);
+
+        // 2) stages 객체의 각 스테이지 portals 배열 패치 (indexOf 기반)
+        const stagesStart = text.indexOf('const stages');
+        let portalPatchCount = 0;
+        for (const [stageId, data] of Object.entries(stageDataMap)) {
+            // stages 블록 안에서 "StageId": 패턴 찾기
+            const stageKey = '"' + stageId + '"';
+            let searchFrom = stagesStart >= 0 ? stagesStart : 0;
+            let stagePos = -1;
+            while (true) {
+                const pos = text.indexOf(stageKey, searchFrom);
+                if (pos === -1) break;
+                // "StageId" 뒤에 : 와 { 가 오는지 확인 (stages 객체의 키)
+                const after = text.substring(pos + stageKey.length, pos + stageKey.length + 20).trimStart();
+                if (after.startsWith(':')) {
+                    stagePos = pos;
+                    break;
+                }
+                searchFrom = pos + 1;
+            }
+            if (stagePos === -1) continue;
+
+            // 해당 스테이지 블록에서 portals: [ 찾기
+            const portalsIdx = text.indexOf('portals:', stagePos);
+            if (portalsIdx === -1) continue;
+
+            // portals: 뒤의 [ 찾기
+            const openBracket = text.indexOf('[', portalsIdx);
+            if (openBracket === -1) continue;
+
+            // 대응하는 ] 찾기 (포탈 객체 안에는 ]가 없으므로 첫 번째 ]가 닫는 괄호)
+            const closeBracket = text.indexOf(']', openBracket);
+            if (closeBracket === -1) continue;
+
+            // 새 portals 블록 생성
+            const portals = data.portals || [];
+            const portalEntries = portals.map(p => {
+                let parts = [`x: ${p.x}`, `y: ${p.y}`, `targetStage: "${p.targetStage}"`];
+                if (p.label) parts.push(`label: "${p.label}"`);
+                return '            { ' + parts.join(', ') + ' }';
+            });
+            const newBlock = portalEntries.length > 0
+                ? '[\n' + portalEntries.join(',\n') + '\n        ]'
+                : '[]';
+
+            // 교체
+            text = text.substring(0, openBracket) + newBlock + text.substring(closeBracket + 1);
+            portalPatchCount++;
+        }
+
+        // 3) stages 객체에 없는 스테이지 자동 추가
+        const stagesEndIdx = text.indexOf('};', stagesStart);
+        let addedCount = 0;
+        if (stagesEndIdx !== -1) {
+            const newStageBlocks = [];
+            for (const [stageId, data] of Object.entries(stageDataMap)) {
+                const stageKey = '"' + stageId + '"';
+                // stages 블록 안에 이 키가 있는지 확인
+                const blockText = text.substring(stagesStart, stagesEndIdx);
+                if (blockText.indexOf(stageKey + ':') !== -1 || blockText.indexOf(stageKey + ' :') !== -1) continue;
+                // 없으면 새 블록 생성
+                const sd = data;
+                let block = `    "${stageId}": {\n`;
+                block += `        number: ${sd.number || 0},\n`;
+                block += `        displayName: "${sd.displayName || stageId}",\n`;
+                block += `        playerStart: { x: ${(sd.playerStart||{}).x||100}, y: ${(sd.playerStart||{}).y||710} },\n`;
+                // platforms
+                block += `        platforms: [\n`;
+                block += (sd.platforms||[]).map(p => `            { x: ${p.x}, y: ${p.y}, width: ${p.width}, height: ${p.height} }`).join(',\n');
+                block += `\n        ],\n`;
+                // monsters
+                block += `        monsters: [\n`;
+                block += (sd.monsters||[]).map(m => `            { x: ${m.x}, y: ${m.y}, type: "${m.type || 'slime'}" }`).join(',\n');
+                block += `\n        ],\n`;
+                // items
+                block += `        items: [\n`;
+                block += (sd.items||[]).map(it => `            { x: ${it.x}, y: ${it.y}, type: "${it.type || 'potion'}" }`).join(',\n');
+                block += `\n        ],\n`;
+                // portals
+                block += `        portals: [\n`;
+                block += (sd.portals||[]).map(p => {
+                    let parts = [`x: ${p.x}`, `y: ${p.y}`, `targetStage: "${p.targetStage}"`];
+                    if (p.label) parts.push(`label: "${p.label}"`);
+                    return '            { ' + parts.join(', ') + ' }';
+                }).join(',\n');
+                block += `\n        ],\n`;
+                // spawners
+                block += `        spawners: [\n`;
+                block += (sd.spawners||[]).map(s => `            { x: ${s.x}, y: ${s.y}, monsterType: "${s.monsterType || 'slime'}" }`).join(',\n');
+                block += `\n        ],\n`;
+                // ladders
+                if (sd.ladders && sd.ladders.length > 0) {
+                    block += `        ladders: [\n`;
+                    block += sd.ladders.map(l => `            { x: ${l.x}, y: ${l.y}, height: ${l.height} }`).join(',\n');
+                    block += `\n        ],\n`;
+                }
+                // background
+                const bg = sd.background || {};
+                block += `        background: {\n`;
+                block += `            skyTop: '${bg.skyTop || '#87CEEB'}',\n`;
+                block += `            skyBottom: '${bg.skyBottom || '#E0F6FF'}',\n`;
+                block += `            mountains: [\n`;
+                block += (bg.mountains||[]).map(m => `                { x1: ${m.x1}, peak: ${m.peak}, x2: ${m.x2}, color: '${m.color}' }`).join(',\n');
+                block += `\n            ]\n`;
+                block += `        }\n`;
+                block += `    }`;
+                newStageBlocks.push(block);
+                addedCount++;
+            }
+            if (newStageBlocks.length > 0) {
+                // }; 앞에 삽입
+                const insertPos = stagesEndIdx;
+                const before = text.substring(0, insertPos).trimEnd();
+                const needsComma = before.endsWith('}');
+                text = before + (needsComma ? ',\n' : '\n') + newStageBlocks.join(',\n') + '\n' + text.substring(insertPos);
+            }
+        }
+
+        const writable = await gamejsHandle.createWritable();
+        await writable.write(text);
+        await writable.close();
+
+        setStatus(`game.js 패치 완료! (worldMapData + ${portalPatchCount}개 포탈 + ${addedCount}개 신규 스테이지)`);
+        showToast(`✅ game.js 패치 완료! (worldMapData + ${portalPatchCount}개 포탈 + ${addedCount}개 신규 스테이지)`);
+        dirty = false;
+    } catch (err) {
+        console.error('game.js 패치 실패:', err);
+        setStatus('game.js 패치 실패: ' + err.message);
+    }
+}
+
+// ============================================================
+// 상태바
+// ============================================================
+function updateStatus() {
+    document.getElementById('statusRight').textContent =
+        `노드: ${nodes.length} | 엣지: ${edges.length} | 스테이지 데이터: ${Object.keys(stageDataMap).length}`;
+}
+
+function setStatus(msg) {
+    document.getElementById('statusLeft').textContent = msg;
+}
+
+let toastTimer = null;
+function showToast(msg, isError) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (isError ? ' error' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = 'toast'; }, 2500);
+}
+
+// ============================================================
+// 레벨 에디터 - 상태
+// ============================================================
+const LE_WORLD_WIDTH = 1920;
+const LE_WORLD_HEIGHT = 810;
+const LE_GRID_SIZE = 32;
+const LE_FLOOR_Y = 760;
+
+let leStageData = null;
+let leSelectedObject = null;
+let leZoom = 1;
+let leTool = 'select';
+let leIsDragging = false;
+let leIsDrawing = false;
+let leDragStart = { x: 0, y: 0 };
+let leDrawStart = { x: 0, y: 0 };
+let lePendingPortalPos = null;
+let leHistory = [];
+const LE_MAX_HISTORY = 30;
+let monsterData = [];
+
+// ============================================================
+// 레벨 에디터 - 몬스터 데이터
+// ============================================================
+function leLoadMonsterData() {
+    if (typeof MONSTER_DATA !== 'undefined') {
+        monsterData = MONSTER_DATA;
+    } else {
+        monsterData = [
+            { id: 100001, type: 'slime', name: '슬라임', width: 40, height: 36 },
+            { id: 100002, type: 'mushroom', name: '버섯', width: 40, height: 36 },
+            { id: 100003, type: 'ghost', name: '유령', width: 40, height: 36 }
+        ];
+    }
+    lePopulateMonsterDropdowns();
+}
+
+function lePopulateMonsterDropdowns() {
+    const html = monsterData.map(m => `<option value="${m.id}">${m.name} (${m.id})</option>`).join('');
+    const ms = document.getElementById('monsterType');
+    const ss = document.getElementById('spawnerType');
+    if (ms) ms.innerHTML = html;
+    if (ss) ss.innerHTML = html;
+    leUpdateSubTypeLabel('monster');
+    leUpdateSubTypeLabel('spawner');
+    leUpdateSubTypeLabel('item');
+}
+
+function leGetMonsterById(id) {
+    return monsterData.find(m => m.id === parseInt(id) || m.id === id);
+}
+function leGetMonsterName(id) {
+    const m = leGetMonsterById(id);
+    return m ? m.name : String(id);
+}
+
+function leUpdateSubTypeLabel(type) {
+    const itemNames = { potion: '포션', lightning: '번개', fireball: '화염구', shuriken: '표창' };
+    const sel = document.getElementById(type + 'Type');
+    const lbl = document.getElementById(type + 'TypeLabel');
+    if (!sel || !lbl) return;
+    lbl.textContent = type === 'item' ? (itemNames[sel.value] || sel.value) : leGetMonsterName(sel.value);
+}
+
+// ============================================================
+// 레벨 에디터 - Undo
+// ============================================================
+function leSaveState() {
+    if (!leStageData) return;
+    leHistory.push(JSON.parse(JSON.stringify(leStageData)));
+    if (leHistory.length > LE_MAX_HISTORY) leHistory.shift();
+}
+
+function leUndo() {
+    if (leHistory.length === 0) return;
+    leStageData = leHistory.pop();
+    leSelectedObject = null;
+    leUpdatePropPanel();
+    leRender();
+}
+
+// ============================================================
+// 레벨 에디터 - 도구
+// ============================================================
+function leSetTool(tool) {
+    leTool = tool;
+    leSelectedObject = null;
+    document.querySelectorAll('#leToolPanel .tool-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-le-tool') === tool);
+    });
+    document.querySelectorAll('.sub-tool-panel').forEach(p => p.classList.remove('active'));
+    if (tool === 'monster') document.getElementById('monsterSubTool').classList.add('active');
+    else if (tool === 'item') document.getElementById('itemSubTool').classList.add('active');
+    else if (tool === 'spawner') document.getElementById('spawnerSubTool').classList.add('active');
+    canvas.style.cursor = tool === 'select' ? 'default' : 'crosshair';
+    leUpdatePropPanel();
+    leRender();
+}
+
+// ============================================================
+// 레벨 에디터 - 좌표/그리드
+// ============================================================
+function leGetMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: (e.clientX - rect.left) / leZoom, y: (e.clientY - rect.top) / leZoom };
+}
+
+function leSnapToGrid(v) { return Math.round(v / LE_GRID_SIZE) * LE_GRID_SIZE; }
+
+// ============================================================
+// 레벨 에디터 - 오브젝트 찾기
+// ============================================================
+function leFindObjectAt(x, y) {
+    if (!leStageData) return null;
+    const ps = leStageData.playerStart;
+    if (x >= ps.x - 16 && x <= ps.x + 48 && y >= ps.y - 48 && y <= ps.y) return { type: 'playerStart', obj: ps };
+    for (let i = leStageData.portals.length - 1; i >= 0; i--) {
+        const p = leStageData.portals[i];
+        if (x >= p.x - 25 && x <= p.x + 25 && y >= p.y - 50 && y <= p.y) return { type: 'portal', obj: p, index: i };
+    }
+    for (let i = leStageData.spawners.length - 1; i >= 0; i--) {
+        const s = leStageData.spawners[i];
+        if (x >= s.x - 20 && x <= s.x + 20 && y >= s.y - 20 && y <= s.y + 20) return { type: 'spawner', obj: s, index: i };
+    }
+    for (let i = leStageData.items.length - 1; i >= 0; i--) {
+        const it = leStageData.items[i];
+        if (x >= it.x - 15 && x <= it.x + 15 && y >= it.y - 15 && y <= it.y + 15) return { type: 'item', obj: it, index: i };
+    }
+    for (let i = leStageData.monsters.length - 1; i >= 0; i--) {
+        const m = leStageData.monsters[i];
+        if (x >= m.x - 20 && x <= m.x + 20 && y >= m.y - 20 && y <= m.y + 20) return { type: 'monster', obj: m, index: i };
+    }
+    for (let i = leStageData.ladders.length - 1; i >= 0; i--) {
+        const l = leStageData.ladders[i];
+        if (x >= l.x - 16 && x <= l.x + 16 && y >= l.y && y <= l.y + l.height) return { type: 'ladder', obj: l, index: i };
+    }
+    for (let i = leStageData.platforms.length - 1; i >= 0; i--) {
+        const p = leStageData.platforms[i];
+        if (x >= p.x && x <= p.x + p.width && y >= p.y && y <= p.y + p.height) return { type: 'platform', obj: p, index: i };
+    }
+    return null;
+}
+
+// ============================================================
+// 레벨 에디터 - 오브젝트 추가/삭제
+// ============================================================
+function leAddMonster(x, y) {
+    leSaveState();
+    const mId = parseInt(document.getElementById('monsterType').value);
+    leStageData.monsters.push({ x: leSnapToGrid(x), y: leSnapToGrid(y), monsterId: mId });
+}
+
+function leAddItem(x, y) {
+    leSaveState();
+    leStageData.items.push({ x: leSnapToGrid(x), y: leSnapToGrid(y), type: document.getElementById('itemType').value });
+}
+
+function leAddSpawner(x, y) {
+    leSaveState();
+    const mId = parseInt(document.getElementById('spawnerType').value);
+    const interval = parseFloat(document.getElementById('spawnerInterval').value) || 5;
+    const max = parseInt(document.getElementById('spawnerMaxMonsters').value) || 2;
+    leStageData.spawners.push({ x: leSnapToGrid(x), y: leSnapToGrid(y), monsterId: mId, spawnInterval: Math.round(interval * 60), maxMonsters: max });
+}
+
+function leSetPlayerStart(x, y) {
+    leSaveState();
+    leStageData.playerStart.x = leSnapToGrid(x);
+    leStageData.playerStart.y = leSnapToGrid(y);
+}
+
+function leOpenPortalModal(x, y) {
+    lePendingPortalPos = { x: leSnapToGrid(x), y: leSnapToGrid(y) };
+    document.getElementById('lePortalTargetStage').value = 'Stage001';
+    document.getElementById('lePortalModal').classList.add('active');
+}
+
+function leClosePortalModal() {
+    document.getElementById('lePortalModal').classList.remove('active');
+    lePendingPortalPos = null;
+}
+
+function leConfirmPortal() {
+    if (lePendingPortalPos) {
+        const target = document.getElementById('lePortalTargetStage').value.trim();
+        if (!target) { alert('이동할 스테이지를 입력해주세요.'); return; }
+        leSaveState();
+        leStageData.portals.push({ x: lePendingPortalPos.x, y: lePendingPortalPos.y, targetStage: target });
+        leRender();
+    }
+    leClosePortalModal();
+}
+
+function leDeleteObject(obj) {
+    if (!obj || !leStageData) return;
+    leSaveState();
+    if (obj.type === 'platform') leStageData.platforms.splice(obj.index, 1);
+    else if (obj.type === 'monster') leStageData.monsters.splice(obj.index, 1);
+    else if (obj.type === 'item') leStageData.items.splice(obj.index, 1);
+    else if (obj.type === 'portal') leStageData.portals.splice(obj.index, 1);
+    else if (obj.type === 'spawner') leStageData.spawners.splice(obj.index, 1);
+    else if (obj.type === 'ladder') leStageData.ladders.splice(obj.index, 1);
+    leSelectedObject = null;
+    leUpdatePropPanel();
+    leRender();
+}
+
+// ============================================================
+// 레벨 에디터 - 이벤트 핸들러
+// ============================================================
+function leOnMouseDown(e) {
+    const pos = leGetMousePos(e);
+    if (e.button === 0) {
+        if (leTool === 'select') {
+            leSelectedObject = leFindObjectAt(pos.x, pos.y);
+            if (leSelectedObject) { leSaveState(); leIsDragging = true; leDragStart = { x: pos.x - leSelectedObject.obj.x, y: pos.y - leSelectedObject.obj.y }; }
+        } else if (leTool === 'platform' || leTool === 'ladder') {
+            leIsDrawing = true; leDrawStart = { x: leSnapToGrid(pos.x), y: leSnapToGrid(pos.y) };
+        } else if (leTool === 'monster') leAddMonster(pos.x, pos.y);
+        else if (leTool === 'item') leAddItem(pos.x, pos.y);
+        else if (leTool === 'portal') leOpenPortalModal(pos.x, pos.y);
+        else if (leTool === 'spawner') leAddSpawner(pos.x, pos.y);
+        else if (leTool === 'playerStart') leSetPlayerStart(pos.x, pos.y);
+    }
+    leUpdatePropPanel();
+    leRender();
+}
+
+function leOnMouseMove(e) {
+    const pos = leGetMousePos(e);
+    if (leIsDragging && leSelectedObject) {
+        leSelectedObject.obj.x = leSnapToGrid(pos.x - leDragStart.x);
+        leSelectedObject.obj.y = leSnapToGrid(pos.y - leDragStart.y);
+        leUpdatePropPanel();
+    }
+    leRender();
+    // 플랫폼/사다리 미리보기
+    if (leIsDrawing && leTool === 'platform') {
+        const endX = leSnapToGrid(pos.x), endY = leSnapToGrid(pos.y);
+        ctx.save(); ctx.scale(leZoom, leZoom);
+        ctx.fillStyle = 'rgba(139,90,43,0.5)'; ctx.strokeStyle = '#fff'; ctx.setLineDash([5,5]);
+        const r = { x: Math.min(leDrawStart.x, endX), y: Math.min(leDrawStart.y, endY), w: Math.abs(endX - leDrawStart.x) || LE_GRID_SIZE, h: Math.abs(endY - leDrawStart.y) || LE_GRID_SIZE };
+        ctx.fillRect(r.x, r.y, r.w, r.h); ctx.strokeRect(r.x, r.y, r.w, r.h);
+        ctx.restore();
+    }
+    if (leIsDrawing && leTool === 'ladder') {
+        const endY = leSnapToGrid(pos.y);
+        ctx.save(); ctx.scale(leZoom, leZoom);
+        ctx.strokeStyle = 'rgba(139,69,19,0.7)'; ctx.lineWidth = 4; ctx.setLineDash([5,5]);
+        const ly = Math.min(leDrawStart.y, endY), lh = Math.abs(endY - leDrawStart.y) || LE_GRID_SIZE * 2;
+        ctx.beginPath(); ctx.moveTo(leDrawStart.x - 12, ly); ctx.lineTo(leDrawStart.x - 12, ly + lh);
+        ctx.moveTo(leDrawStart.x + 12, ly); ctx.lineTo(leDrawStart.x + 12, ly + lh); ctx.stroke();
+        ctx.lineWidth = 3;
+        for (let ry = ly + 10; ry < ly + lh; ry += 20) { ctx.beginPath(); ctx.moveTo(leDrawStart.x - 12, ry); ctx.lineTo(leDrawStart.x + 12, ry); ctx.stroke(); }
+        ctx.restore();
+    }
+}
+
+function leOnMouseUp(e) {
+    const pos = leGetMousePos(e);
+    if (leIsDrawing && leTool === 'platform') {
+        const endX = leSnapToGrid(pos.x), endY = leSnapToGrid(pos.y);
+        const p = { x: Math.min(leDrawStart.x, endX), y: Math.min(leDrawStart.y, endY), width: Math.abs(endX - leDrawStart.x) || LE_GRID_SIZE, height: Math.abs(endY - leDrawStart.y) || LE_GRID_SIZE };
+        if (p.width >= LE_GRID_SIZE && p.height >= LE_GRID_SIZE) { leSaveState(); leStageData.platforms.push(p); }
+    }
+    if (leIsDrawing && leTool === 'ladder') {
+        const endY = leSnapToGrid(pos.y);
+        const l = { x: leDrawStart.x, y: Math.min(leDrawStart.y, endY), height: Math.abs(endY - leDrawStart.y) || LE_GRID_SIZE * 4 };
+        if (l.height >= LE_GRID_SIZE * 2) { leSaveState(); leStageData.ladders.push(l); }
+    }
+    leIsDragging = false; leIsDrawing = false;
+    leRender();
+}
+
+function leOnContextMenu(e) {
+    e.preventDefault();
+    const pos = leGetMousePos(e);
+    const obj = leFindObjectAt(pos.x, pos.y);
+    if (obj) leDeleteObject(obj);
+}
+
+function leOnWheel(e) {
+    e.preventDefault();
+    if (e.deltaY < 0) { if (leZoom < 2) leZoom = Math.min(2, leZoom + 0.1); }
+    else { if (leZoom > 0.3) leZoom = Math.max(0.3, leZoom - 0.1); }
+    document.getElementById('zoomLabel').textContent = Math.round(leZoom * 100) + '%';
+    canvas.width = LE_WORLD_WIDTH * leZoom;
+    canvas.height = LE_WORLD_HEIGHT * leZoom;
+    leRender();
+}
+
+function leOnKeyDown(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    switch(e.key) {
+        case '1': leSetTool('select'); break;
+        case '2': leSetTool('platform'); break;
+        case '3': leSetTool('monster'); break;
+        case '4': leSetTool('item'); break;
+        case '5': leSetTool('portal'); break;
+        case '6': leSetTool('spawner'); break;
+        case '7': leSetTool('ladder'); break;
+        case '8': leSetTool('playerStart'); break;
+        case 'Delete': case 'Backspace': if (leSelectedObject) leDeleteObject(leSelectedObject); break;
+        case 'z': if (e.ctrlKey) { e.preventDefault(); leUndo(); } break;
+    }
+}
+
+// ============================================================
+// 레벨 에디터 - 렌더링
+// ============================================================
+function leRender() {
+    if (!leStageData) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.scale(leZoom, leZoom);
+    const bg = leStageData.background || {};
+    // 하늘
+    const grad = ctx.createLinearGradient(0, 0, 0, LE_WORLD_HEIGHT);
+    grad.addColorStop(0, bg.skyTop || '#87CEEB');
+    grad.addColorStop(1, bg.skyBottom || '#E0F6FF');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, LE_WORLD_WIDTH, LE_WORLD_HEIGHT);
+    // 산
+    if (bg.mountains) bg.mountains.forEach(mt => {
+        ctx.fillStyle = mt.color;
+        ctx.beginPath(); ctx.moveTo(mt.x1, LE_FLOOR_Y);
+        ctx.lineTo((mt.x1 + mt.x2) / 2, LE_FLOOR_Y - mt.peak); ctx.lineTo(mt.x2, LE_FLOOR_Y); ctx.fill();
+    });
+    // 집
+    if (bg.houses) bg.houses.forEach(h => {
+        ctx.fillStyle = h.wallColor || '#D2691E';
+        ctx.fillRect(h.x, LE_FLOOR_Y - h.height, h.width, h.height);
+        ctx.fillStyle = h.roofColor || '#8B0000';
+        ctx.beginPath(); ctx.moveTo(h.x - 10, LE_FLOOR_Y - h.height);
+        ctx.lineTo(h.x + h.width / 2, LE_FLOOR_Y - h.height - h.roofHeight);
+        ctx.lineTo(h.x + h.width + 10, LE_FLOOR_Y - h.height); ctx.fill();
+        ctx.fillStyle = '#4A2810'; const dw = h.width * 0.25, dh = h.height * 0.5;
+        ctx.fillRect(h.x + h.width / 2 - dw / 2, LE_FLOOR_Y - dh, dw, dh);
+        ctx.fillStyle = '#87CEEB'; const ws = h.width * 0.2;
+        ctx.fillRect(h.x + h.width * 0.15, LE_FLOOR_Y - h.height * 0.75, ws, ws);
+        ctx.fillRect(h.x + h.width * 0.65, LE_FLOOR_Y - h.height * 0.75, ws, ws);
+    });
+    // 그리드
+    ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
+    for (let x = 0; x <= LE_WORLD_WIDTH; x += LE_GRID_SIZE) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, LE_WORLD_HEIGHT); ctx.stroke(); }
+    for (let y = 0; y <= LE_WORLD_HEIGHT; y += LE_GRID_SIZE) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(LE_WORLD_WIDTH, y); ctx.stroke(); }
+    // 바닥
+    ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0, LE_FLOOR_Y); ctx.lineTo(LE_WORLD_WIDTH, LE_FLOOR_Y); ctx.stroke();
+    ctx.fillStyle = '#654321'; ctx.fillRect(0, LE_FLOOR_Y, LE_WORLD_WIDTH, LE_WORLD_HEIGHT - LE_FLOOR_Y);
+    // 플랫폼
+    leStageData.platforms.forEach((p, i) => {
+        const sel = leSelectedObject && leSelectedObject.type === 'platform' && leSelectedObject.index === i;
+        ctx.fillStyle = '#8B5A2B'; ctx.fillRect(p.x, p.y, p.width, p.height);
+        ctx.strokeStyle = sel ? '#ff0' : '#654321'; ctx.lineWidth = sel ? 3 : 2;
+        ctx.strokeRect(p.x, p.y, p.width, p.height);
+        ctx.fillStyle = '#228B22'; ctx.fillRect(p.x, p.y, p.width, 5);
+    });
+    // 몬스터
+    leStageData.monsters.forEach((m, i) => {
+        const sel = leSelectedObject && leSelectedObject.type === 'monster' && leSelectedObject.index === i;
+        const info = leGetMonsterById(m.monsterId);
+        leDrawMonster(m.x, m.y, info ? info.type : 'slime', sel, info);
+    });
+    // 아이템
+    leStageData.items.forEach((it, i) => {
+        const sel = leSelectedObject && leSelectedObject.type === 'item' && leSelectedObject.index === i;
+        leDrawItem(it.x, it.y, it.type, sel);
+    });
+    // 포탈
+    leStageData.portals.forEach((p, i) => {
+        const sel = leSelectedObject && leSelectedObject.type === 'portal' && leSelectedObject.index === i;
+        leDrawPortal(p.x, p.y, p.targetStage, sel);
+    });
+    // 스포너
+    leStageData.spawners.forEach((s, i) => {
+        const sel = leSelectedObject && leSelectedObject.type === 'spawner' && leSelectedObject.index === i;
+        const info = leGetMonsterById(s.monsterId);
+        leDrawSpawner(s.x, s.y, info ? info.name : 'Unknown', sel);
+    });
+    // 사다리
+    leStageData.ladders.forEach((l, i) => {
+        const sel = leSelectedObject && leSelectedObject.type === 'ladder' && leSelectedObject.index === i;
+        leDrawLadder(l.x, l.y, l.height, sel);
+    });
+    // 플레이어 시작점
+    leDrawPlayerStart(leStageData.playerStart.x, leStageData.playerStart.y, leSelectedObject && leSelectedObject.type === 'playerStart');
+    // 경계선
+    ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 2; ctx.setLineDash([10, 5]);
+    ctx.strokeRect(0, 0, LE_WORLD_WIDTH, LE_WORLD_HEIGHT); ctx.setLineDash([]);
+    ctx.restore();
+}
+
+// 몬스터 그리기
+function leDrawMonster(x, y, type, sel, info) {
+    ctx.save();
+    const w = info ? info.width : 40, h = info ? info.height : 36;
+    const sc = Math.max(w, h) / 40;
+    if (type === 'slime') {
+        ctx.fillStyle = '#44ff44'; ctx.beginPath(); ctx.ellipse(x, y - h/3, w/2, h/2.5, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#000'; ctx.fillRect(x - w/5, y - h/2.5, 4*sc, 4*sc); ctx.fillRect(x + w/10, y - h/2.5, 4*sc, 4*sc);
+    } else if (type === 'mushroom') {
+        ctx.fillStyle = '#ffe4c4'; ctx.fillRect(x - w/5, y - h/2, w/2.5, h/2);
+        ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.ellipse(x, y - h/1.6, w/2, h/3, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x - w/5, y - h/1.4, 4*sc, 0, Math.PI*2); ctx.arc(x + w/5, y - h/1.8, 3*sc, 0, Math.PI*2); ctx.fill();
+    } else if (type === 'ghost') {
+        ctx.fillStyle = 'rgba(200,200,255,0.8)'; ctx.beginPath(); ctx.ellipse(x, y - h/3, w/2, h/2, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#000'; ctx.fillRect(x - w/5, y - h/2, 5*sc, 5*sc); ctx.fillRect(x + w/12, y - h/2, 5*sc, 5*sc);
+    } else if (type === 'ghostBoss') {
+        ctx.fillStyle = 'rgba(106,13,173,0.85)'; ctx.beginPath(); ctx.ellipse(x, y - h/3, w/2, h/2, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ffd700'; ctx.beginPath();
+        ctx.moveTo(x-w/3, y-h/1.5); ctx.lineTo(x-w/4, y-h/1.2); ctx.lineTo(x-w/8, y-h/1.4);
+        ctx.lineTo(x, y-h/1.1); ctx.lineTo(x+w/8, y-h/1.4); ctx.lineTo(x+w/4, y-h/1.2); ctx.lineTo(x+w/3, y-h/1.5); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ffff00'; ctx.fillRect(x-w/5, y-h/2, 5*sc, 5*sc); ctx.fillRect(x+w/12, y-h/2, 5*sc, 5*sc);
+    } else if (type === 'ghostSlave') {
+        ctx.fillStyle = 'rgba(32,178,170,0.7)'; ctx.beginPath(); ctx.ellipse(x, y - h/3, w/2, h/2, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ff3333'; ctx.fillRect(x-w/5, y-h/2, 4*sc, 4*sc); ctx.fillRect(x+w/12, y-h/2, 4*sc, 4*sc);
+    }
+    if (info) { ctx.fillStyle = '#fff'; ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.fillText(info.name, x, y + 15); }
+    if (sel) { ctx.strokeStyle = '#ff0'; ctx.lineWidth = 2; ctx.strokeRect(x - w/2 - 5, y - h - 5, w + 10, h + 25); }
+    ctx.restore();
+}
+
+// 아이템 그리기
+function leDrawItem(x, y, type, sel) {
+    ctx.save();
+    if (type === 'potion') {
+        ctx.fillStyle = '#ff6666'; ctx.beginPath();
+        ctx.moveTo(x, y-20); ctx.lineTo(x+10, y-10); ctx.lineTo(x+10, y+10); ctx.lineTo(x-10, y+10); ctx.lineTo(x-10, y-10); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#8B4513'; ctx.fillRect(x-5, y-25, 10, 8);
+    } else if (type === 'lightning') {
+        ctx.fillStyle = '#ffff00'; ctx.beginPath();
+        ctx.moveTo(x+5, y-20); ctx.lineTo(x-10, y); ctx.lineTo(x, y); ctx.lineTo(x-5, y+20); ctx.lineTo(x+10, y); ctx.lineTo(x, y); ctx.closePath(); ctx.fill();
+    } else if (type === 'fireball') {
+        ctx.fillStyle = '#ff6600'; ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ffff00'; ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2); ctx.fill();
+    } else if (type === 'shuriken') {
+        ctx.fillStyle = '#5a5a5a'; ctx.strokeStyle = '#3a3a3a'; ctx.lineWidth = 1;
+        for (let i = 0; i < 4; i++) {
+            ctx.save(); ctx.translate(x, y); ctx.rotate(i * Math.PI / 2);
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-4, -4); ctx.lineTo(0, -14); ctx.lineTo(4, -4); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+        }
+        ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fillStyle = '#7a7a7a'; ctx.fill(); ctx.stroke();
+    }
+    if (sel) { ctx.strokeStyle = '#ff0'; ctx.lineWidth = 2; ctx.strokeRect(x-18, y-28, 36, 56); }
+    ctx.restore();
+}
+
+// 포탈 그리기
+function leDrawPortal(x, y, targetStage, sel) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(138,43,226,0.7)'; ctx.beginPath(); ctx.ellipse(x, y-25, 25, 35, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(75,0,130,0.8)'; ctx.beginPath(); ctx.ellipse(x, y-25, 15, 25, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('\u{1F300}', x, y - 25);
+    ctx.fillStyle = '#ffff00'; ctx.font = 'bold 11px Arial'; ctx.textBaseline = 'alphabetic';
+    const dn = String(targetStage).length > 12 ? String(targetStage).substring(0, 10) + '..' : targetStage;
+    ctx.fillText('\u2192 ' + dn, x, y + 15);
+    if (sel) { ctx.strokeStyle = '#ff0'; ctx.lineWidth = 2; ctx.strokeRect(x-30, y-65, 60, 100); }
+    ctx.restore();
+}
+
+// 스포너 그리기
+function leDrawSpawner(x, y, name, sel) {
+    ctx.save();
+    ctx.fillStyle = '#333'; ctx.fillRect(x-20, y-10, 40, 20);
+    ctx.fillStyle = '#ff0000'; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Arial'; ctx.textAlign = 'center'; ctx.fillText(name, x, y + 25);
+    if (sel) { ctx.strokeStyle = '#ff0'; ctx.lineWidth = 2; ctx.strokeRect(x-25, y-15, 50, 45); }
+    ctx.restore();
+}
+
+// 사다리 그리기
+function leDrawLadder(x, y, height, sel) {
+    ctx.save();
+    ctx.fillStyle = '#8B4513'; ctx.fillRect(x-16, y, 4, height); ctx.fillRect(x+12, y, 4, height);
+    ctx.fillStyle = '#A0522D';
+    for (let ry = y + 10; ry < y + height; ry += 20) ctx.fillRect(x - 16, ry, 32, 4);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 9px Arial'; ctx.textAlign = 'center'; ctx.fillText('\u{1FA9C}', x, y - 5);
+    if (sel) { ctx.strokeStyle = '#ff0'; ctx.lineWidth = 2; ctx.strokeRect(x-21, y-5, 42, height+10); }
+    ctx.restore();
+}
+
+// 시작점 그리기
+function leDrawPlayerStart(x, y, sel) {
+    ctx.save();
+    ctx.fillStyle = '#4a90d9'; ctx.fillRect(x, y-32, 24, 24);
+    ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(x+12, y-36, 10, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#00ff00'; ctx.lineWidth = 2; ctx.setLineDash([5,3]);
+    ctx.beginPath(); ctx.arc(x+12, y-24, 30, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#00ff00'; ctx.font = 'bold 10px Arial'; ctx.textAlign = 'center'; ctx.fillText('START', x+12, y+15);
+    if (sel) { ctx.strokeStyle = '#ff0'; ctx.lineWidth = 2; ctx.strokeRect(x-20, y-55, 64, 75); }
+    ctx.restore();
+}
+
+// ============================================================
+// 레벨 에디터 - 속성 패널
+// ============================================================
+function leUpdatePropPanel() {
+    const panel = document.getElementById('propContent');
+    if (!leStageData) { panel.innerHTML = '<p style="color:#666;font-size:12px;">에디터 데이터 없음</p>'; return; }
+
+    let html = '';
+    if (leSelectedObject) {
+        const obj = leSelectedObject.obj;
+        html += `<h3 style="color:#e94560;margin-bottom:8px;">${leSelectedObject.type} 속성</h3>`;
+        html += `<div class="prop-row"><div class="prop-group"><label>X</label><input type="number" value="${obj.x}" onchange="leUpdateProperty('x',this.value)"></div>`;
+        html += `<div class="prop-group"><label>Y</label><input type="number" value="${obj.y}" onchange="leUpdateProperty('y',this.value)"></div></div>`;
+        if (leSelectedObject.type === 'platform') {
+            html += `<div class="prop-row"><div class="prop-group"><label>너비</label><input type="number" value="${obj.width}" onchange="leUpdateProperty('width',this.value)"></div>`;
+            html += `<div class="prop-group"><label>높이</label><input type="number" value="${obj.height}" onchange="leUpdateProperty('height',this.value)"></div></div>`;
+        }
+        if (leSelectedObject.type === 'monster') {
+            const opts = monsterData.map(m => `<option value="${m.id}" ${obj.monsterId===m.id?'selected':''}>${m.name} (${m.id})</option>`).join('');
+            html += `<div class="prop-group"><label>몬스터</label><select onchange="leUpdateProperty('monsterId',parseInt(this.value))">${opts}</select></div>`;
+        }
+        if (leSelectedObject.type === 'item') {
+            html += `<div class="prop-group"><label>타입</label><select onchange="leUpdateProperty('type',this.value)">
+                <option value="potion" ${obj.type==='potion'?'selected':''}>포션</option>
+                <option value="lightning" ${obj.type==='lightning'?'selected':''}>번개</option>
+                <option value="fireball" ${obj.type==='fireball'?'selected':''}>화염구</option>
+                <option value="shuriken" ${obj.type==='shuriken'?'selected':''}>표창</option></select></div>`;
+        }
+        if (leSelectedObject.type === 'portal') {
+            html += `<div class="prop-group"><label>이동할 스테이지</label><input type="text" value="${obj.targetStage}" onchange="leUpdateProperty('targetStage',this.value)"></div>`;
+        }
+        if (leSelectedObject.type === 'spawner') {
+            const opts = monsterData.map(m => `<option value="${m.id}" ${obj.monsterId===m.id?'selected':''}>${m.name} (${m.id})</option>`).join('');
+            html += `<div class="prop-group"><label>몬스터</label><select onchange="leUpdateProperty('monsterId',parseInt(this.value))">${opts}</select></div>`;
+            const sec = (obj.spawnInterval || 300) / 60;
+            html += `<div class="prop-group"><label>스폰 주기 (초)</label><input type="number" value="${sec}" min="1" max="60" step="0.5" onchange="leUpdateProperty('spawnInterval',Math.round(parseFloat(this.value)*60))"></div>`;
+            html += `<div class="prop-group"><label>최대 수</label><input type="number" value="${obj.maxMonsters||2}" min="1" max="10" onchange="leUpdateProperty('maxMonsters',parseInt(this.value))"></div>`;
+        }
+        if (leSelectedObject.type === 'ladder') {
+            html += `<div class="prop-group"><label>높이</label><input type="number" value="${obj.height}" onchange="leUpdateProperty('height',this.value)"></div>`;
+        }
+    } else {
+        html += '<p style="color:#666;font-size:12px;">오브젝트를 선택하세요</p>';
+    }
+
+    // 배경 설정
+    const bg = leStageData.background || {};
+    html += `<div class="le-bg-section"><h4>배경 설정</h4>
+        <div class="prop-row">
+            <div class="prop-group"><label>하늘 상단</label><input type="color" id="leBgSkyTop" value="${bg.skyTop||'#87CEEB'}" onchange="leUpdateBackground()"></div>
+            <div class="prop-group"><label>하늘 하단</label><input type="color" id="leBgSkyBottom" value="${bg.skyBottom||'#E0F6FF'}" onchange="leUpdateBackground()"></div>
+        </div>
+        <div class="prop-group"><label>프리셋</label>
+            <select id="leBgPreset" onchange="leApplyBgPreset()">
+                <option value="custom">사용자 정의</option><option value="grassland">초원</option><option value="cave">동굴</option>
+                <option value="desert">사막</option><option value="night">밤</option><option value="sunset">석양</option><option value="village">마을</option>
+            </select></div>
+        <div class="prop-group"><label>산 색상</label>
+            <input type="color" id="leBgMt1" value="${bg.mountains&&bg.mountains[0]?bg.mountains[0].color:'#9DC183'}" onchange="leUpdateBackground()" style="width:45%">
+            <input type="color" id="leBgMt2" value="${bg.mountains&&bg.mountains[1]?bg.mountains[1].color:'#7CAF6B'}" onchange="leUpdateBackground()" style="width:45%">
+        </div>
+    </div>`;
+
+    // 오브젝트 카운트
+    const cnt = leStageData.platforms.length + leStageData.monsters.length + leStageData.items.length + leStageData.portals.length + leStageData.spawners.length + (leStageData.ladders||[]).length;
+    html += `<hr style="border-color:#0f3460;margin:10px 0;"><p style="font-size:10px;color:#666;">오브젝트: ${cnt}개</p>`;
+
+    panel.innerHTML = html;
+}
+
+function leUpdateProperty(prop, value) {
+    if (!leSelectedObject) return;
+    leSaveState();
+    if (prop === 'x' || prop === 'y' || prop === 'width' || prop === 'height') value = parseInt(value);
+    leSelectedObject.obj[prop] = value;
+    leRender();
+}
+
+// ============================================================
+// 레벨 에디터 - 배경
+// ============================================================
+function leUpdateBackground() {
+    if (!leStageData) return;
+    leSaveState();
+    const bg = leStageData.background;
+    bg.skyTop = document.getElementById('leBgSkyTop').value;
+    bg.skyBottom = document.getElementById('leBgSkyBottom').value;
+    const c1 = document.getElementById('leBgMt1').value, c2 = document.getElementById('leBgMt2').value;
+    if (bg.mountains) bg.mountains.forEach((m, i) => m.color = i % 2 === 0 ? c1 : c2);
+    document.getElementById('leBgPreset').value = 'custom';
+    leRender();
+}
+
+function leApplyBgPreset() {
+    if (!leStageData) return;
+    const preset = document.getElementById('leBgPreset').value;
+    const presets = {
+        grassland: { skyTop: '#87CEEB', skyBottom: '#E0F6FF', mt1: '#9DC183', mt2: '#7CAF6B' },
+        cave: { skyTop: '#1a1a2e', skyBottom: '#2d2d44', mt1: '#3d3d5c', mt2: '#2d2d44' },
+        desert: { skyTop: '#f4a460', skyBottom: '#ffe4b5', mt1: '#deb887', mt2: '#d2b48c' },
+        night: { skyTop: '#0a0a23', skyBottom: '#1a1a3a', mt1: '#2a2a4a', mt2: '#1a1a3a' },
+        sunset: { skyTop: '#ff7e5f', skyBottom: '#feb47b', mt1: '#8B4513', mt2: '#A0522D' },
+        village: { skyTop: '#7EC8E3', skyBottom: '#F5F5DC', mt1: '#6B8E23', mt2: '#556B2F',
+            houses: [
+                { x: 100, width: 80, height: 70, roofHeight: 40, wallColor: '#D2691E', roofColor: '#8B0000' },
+                { x: 300, width: 100, height: 90, roofHeight: 50, wallColor: '#DEB887', roofColor: '#A0522D' },
+                { x: 550, width: 70, height: 60, roofHeight: 35, wallColor: '#F4A460', roofColor: '#800000' },
+                { x: 750, width: 90, height: 80, roofHeight: 45, wallColor: '#D2B48C', roofColor: '#8B4513' }
+            ]
+        }
+    };
+    if (preset === 'custom' || !presets[preset]) return;
+    leSaveState();
+    const p = presets[preset], bg = leStageData.background;
+    bg.skyTop = p.skyTop; bg.skyBottom = p.skyBottom;
+    if (bg.mountains) bg.mountains.forEach((m, i) => m.color = i % 2 === 0 ? p.mt1 : p.mt2);
+    bg.houses = p.houses ? JSON.parse(JSON.stringify(p.houses)) : [];
+    leUpdatePropPanel();
+    leRender();
+}
+
+// ============================================================
+// 레벨 에디터 - 미리보기
+// ============================================================
+function lePreview() {
+    if (!leStageData) return;
+    localStorage.setItem('editorPreviewStage', JSON.stringify(leStageData));
+    window.open('index.html?preview=1', '_blank');
+}
+
+// ============================================================
+// 뷰 전환
+// ============================================================
+function switchToLevelEditor(stageId) {
+    const data = stageDataMap[stageId];
+    if (!data) { showToast('Stage 데이터가 없습니다.', true); return; }
+
+    editingStageId = stageId;
+    leStageData = JSON.parse(JSON.stringify(data));
+    leHistory = [];
+    leSelectedObject = null;
+    leZoom = 1;
+    leTool = 'select';
+    leIsDragging = false;
+    leIsDrawing = false;
+
+    currentView = 'leveleditor';
+    document.getElementById('wmToolbarItems').style.display = 'none';
+    document.getElementById('leToolbarItems').style.display = 'flex';
+    document.getElementById('btnBackToWorldMap').style.display = '';
+    document.getElementById('wmToolPanel').style.display = 'none';
+    document.getElementById('leToolPanel').style.display = '';
+    document.getElementById('leStageLabel').textContent = `${stageId} (${leStageData.displayName || ''})`;
+
+    container.classList.add('leveleditor');
+    canvas.width = LE_WORLD_WIDTH * leZoom;
+    canvas.height = LE_WORLD_HEIGHT * leZoom;
+    document.getElementById('zoomLabel').textContent = Math.round(leZoom * 100) + '%';
+
+    document.querySelectorAll('#leToolPanel .tool-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-le-tool') === 'select'));
+    document.querySelectorAll('.sub-tool-panel').forEach(p => p.classList.remove('active'));
+
+    leUpdatePropPanel();
+    leRender();
+}
+
+function switchToWorldMap() {
+    // 에디터 데이터를 stageDataMap에 저장
+    if (editingStageId && leStageData) {
+        stageDataMap[editingStageId] = JSON.parse(JSON.stringify(leStageData));
+        showToast(`${editingStageId} 레벨 데이터 저장 완료`);
+    }
+
+    editingStageId = null;
+    leStageData = null;
+    leSelectedObject = null;
+
+    currentView = 'worldmap';
+    document.getElementById('wmToolbarItems').style.display = 'flex';
+    document.getElementById('leToolbarItems').style.display = 'none';
+    document.getElementById('btnBackToWorldMap').style.display = 'none';
+    document.getElementById('wmToolPanel').style.display = '';
+    document.getElementById('leToolPanel').style.display = 'none';
+
+    container.classList.remove('leveleditor');
+    canvas.style.position = 'absolute';
+    resizeCanvas();
+
+    selectedNode = null;
+    selectedEdge = null;
+    updatePropPanel();
+    render();
+}
+
+// ============================================================
+// 시작
+// ============================================================
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+{
+  "number": 0,
+  "displayName": "나뭇잎 마을",
+  "playerStart": {
+    "x": 96,
+    "y": 722
+  },
+  "platforms": [
+    {
+      "x": 256,
+      "y": 626,
+      "width": 512,
+      "height": 32
+    }
+  ],
+  "monsters": [],
+  "items": [],
+  "portals": [
+    {
+      "x": 286,
+      "y": 562,
+      "targetStage": "Stage003",
+      "label": "버려진 사막"
+    },
+    {
+      "x": 738,
+      "y": 562,
+      "targetStage": "Stage002",
+      "label": "어둠의 동굴"
+    },
+    {
+      "x": 366,
+      "y": 562,
+      "targetStage": "Stage001",
+      "label": "초원 지대"
+    }
+  ],
+  "spawners": [],
+  "background": {
+    "skyTop": "#6B8E9F",
+    "skyBottom": "#A8C8D8",
+    "mountains": [
+      {
+        "x1": 0,
+        "peak": 200,
+        "x2": 400,
+        "color": "#8FA88F"
+      },
+      {
+        "x1": 300,
+        "peak": 250,
+        "x2": 700,
+        "color": "#7A997A"
+      },
+      {
+        "x1": 600,
+        "peak": 180,
+        "x2": 900,
+        "color": "#8FA88F"
+      }
+    ]
+  }
+}

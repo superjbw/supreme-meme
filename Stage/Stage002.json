@@ -369,16 +369,22 @@
   ],
   "portals": [
     {
-      "x": 128,
-      "y": 320,
+      "x": 200,
+      "y": 620,
       "targetStage": "Stage001",
       "label": "초원 지대"
     },
     {
-      "x": 1472,
-      "y": 338,
-      "targetStage": "Stage003",
-      "label": "버려진 사막"
+      "x": 80,
+      "y": 626,
+      "targetStage": "Stage000",
+      "label": "나뭇잎 마을"
+    },
+    {
+      "x": 1520,
+      "y": 346,
+      "targetStage": "Stage006",
+      "label": "호박 광산"
     }
   ],
   "spawners": [

@@ -324,15 +324,34 @@
   ],
   "portals": [
     {
-      "x": 1470,
-      "y": 340,
+      "x": 280,
+      "y": 620,
       "targetStage": "Stage002",
       "label": "어둠의 동굴"
     },
     {
-      "x": 288,
-      "y": 192,
-      "targetStage": "Lobby"
+      "x": 360,
+      "y": 620,
+      "targetStage": "Stage003",
+      "label": "버려진 사막"
+    },
+    {
+      "x": 1520,
+      "y": 496,
+      "targetStage": "Stage000",
+      "label": "나뭇잎 마을"
+    },
+    {
+      "x": 110,
+      "y": 366,
+      "targetStage": "Stage004",
+      "label": "얼음 절벽"
+    },
+    {
+      "x": 1450,
+      "y": 596,
+      "targetStage": "Stage006",
+      "label": "호박 광산"
     }
   ],
   "spawners": [
