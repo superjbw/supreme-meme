@@ -198,6 +198,10 @@ let sellQuantity = 1; // 판매 수량 (재료/아이템용)
 let showWorldMap = false;
 let worldMapHoverNode = null;
 let worldMapAnimTimer = 0;
+let worldMapPan = { x: 0, y: 0 };
+let worldMapDragging = false;
+let worldMapDragStart = { x: 0, y: 0 };
+let worldMapPanStart = { x: 0, y: 0 };
 const unlockedStages = new Set(["Lobby"]);
 
 // 장비 아이템 배열
@@ -3312,7 +3316,8 @@ const stages = {    "Stage001": {
             { x: 360, y: 620, targetStage: "Stage003", label: "버려진 사막" },
             { x: 1520, y: 496, targetStage: "Stage000", label: "나뭇잎 마을" },
             { x: 110, y: 366, targetStage: "Stage004", label: "얼음 절벽" },
-            { x: 1450, y: 596, targetStage: "Stage006", label: "호박 광산" }
+            { x: 1450, y: 596, targetStage: "Stage006", label: "호박 광산" },
+            { x: 130, y: 626, targetStage: "Stage007", label: "서리 광산" }
         ],
         items: [
             { x: 430, y: 435, type: 'potion' },
@@ -3924,6 +3929,98 @@ const stages = {    "Stage001": {
                 { x1: 1300, peak: 160, x2: 1600, color: '#2d2d44' }
             ]
         }
+    },
+    "Stage007": {
+        number: 7,
+        displayName: "서리 광산",
+        playerStart: { x: 100, y: 710 },
+        platforms: [
+            { x: 100, y: 690, width: 200, height: 30 },
+            { x: 50, y: 590, width: 150, height: 30 },
+            { x: 250, y: 530, width: 180, height: 30 },
+            { x: 80, y: 430, width: 140, height: 30 },
+            { x: 450, y: 660, width: 200, height: 30 },
+            { x: 550, y: 560, width: 150, height: 30 },
+            { x: 400, y: 470, width: 180, height: 30 },
+            { x: 600, y: 390, width: 160, height: 30 },
+            { x: 850, y: 690, width: 200, height: 30 },
+            { x: 1000, y: 610, width: 180, height: 30 },
+            { x: 1150, y: 530, width: 200, height: 30 },
+            { x: 1050, y: 430, width: 150, height: 30 },
+            { x: 1300, y: 660, width: 180, height: 30 },
+            { x: 1400, y: 560, width: 150, height: 30 },
+            { x: 1450, y: 410, width: 130, height: 30 },
+            { x: 256, y: 256, width: 160, height: 32 }
+        ],
+        monsters: [
+            { x: 500, y: 710, type: "slime" },
+            { x: 580, y: 510, type: "mushroom" },
+            { x: 630, y: 340, type: "slime" },
+            { x: 900, y: 710, type: "slime" },
+            { x: 1050, y: 560, type: "mushroom" },
+            { x: 1200, y: 480, type: "mushroom" },
+            { x: 1350, y: 610, type: "slime" },
+            { x: 1470, y: 360, type: "slime" },
+            { x: 300, y: 480, type: "mushroom" },
+            { x: 480, y: 610, type: "mushroom" },
+            { x: 1100, y: 640, type: "mushroom" },
+            { x: 350, y: 710, type: "slime" },
+            { x: 600, y: 710, type: "mushroom" },
+            { x: 750, y: 710, type: "slime" },
+            { x: 1000, y: 710, type: "mushroom" },
+            { x: 1150, y: 710, type: "slime" },
+            { x: 1300, y: 710, type: "mushroom" },
+            { x: 1450, y: 710, type: "slime" },
+            { x: 420, y: 420, type: "mushroom" },
+            { x: 520, y: 420, type: "slime" },
+            { x: 680, y: 340, type: "mushroom" },
+            { x: 880, y: 640, type: "slime" },
+            { x: 1020, y: 560, type: "slime" },
+            { x: 1180, y: 480, type: "slime" },
+            { x: 1320, y: 610, type: "mushroom" },
+            { x: 100, y: 540, type: "slime" },
+            { x: 180, y: 640, type: "mushroom" },
+            { x: 280, y: 380, type: "slime" },
+            { x: 550, y: 510, type: "slime" },
+            { x: 950, y: 640, type: "mushroom" },
+            { x: 1250, y: 480, type: "slime" },
+            { x: 1400, y: 510, type: "mushroom" },
+            { x: 1500, y: 360, type: "mushroom" }
+        ],
+        items: [
+            { x: 430, y: 435, type: "potion" },
+            { x: 1100, y: 495, type: "potion" },
+            { x: 630, y: 355, type: "lightning" },
+            { x: 1400, y: 525, type: "lightning" },
+            { x: 280, y: 495, type: "fireball" },
+            { x: 1080, y: 395, type: "fireball" },
+            { x: 850, y: 445, type: "shuriken" },
+            { x: 200, y: 545, type: "shuriken" },
+            { x: 550, y: 495, type: "shuriken" },
+            { x: 1200, y: 545, type: "shuriken" }
+        ],
+        portals: [
+            { x: 1550, y: 346, targetStage: "Stage001", label: "초원 지대" }
+        ],
+        spawners: [
+            { x: 50, y: 320, monsterType: "ghost" },
+            { x: 1490, y: 680, monsterType: "ghost" }
+        ],
+        ladders: [
+            { x: 352, y: 224, height: 288 }
+        ],
+        background: {
+            skyTop: '#87CEEB',
+            skyBottom: '#E0F6FF',
+            mountains: [
+                { x1: 0, peak: 150, x2: 300, color: '#9DC183' },
+                { x1: 200, peak: 200, x2: 600, color: '#7CAF6B' },
+                { x1: 500, peak: 120, x2: 900, color: '#9DC183' },
+                { x1: 800, peak: 180, x2: 1200, color: '#7CAF6B' },
+                { x1: 1100, peak: 140, x2: 1400, color: '#9DC183' },
+                { x1: 1300, peak: 160, x2: 1600, color: '#7CAF6B' }
+            ]
+        }
     }
 };
 
@@ -3932,11 +4029,12 @@ const worldMapData = {
     nodes: [
         { id: "Stage000", x: 406, y: 355, label: "나뭇잎 마을", type: 'lobby', reqLevel: 0, color: '#4CAF50', icon: 'field' },
         { id: "Stage001", x: 397, y: 88, label: "초원 지대", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
-        { id: "Stage003", x: 156, y: 203, label: "버려진 사막", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
+        { id: "Stage006", x: 714, y: 59, label: "호박 광산", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
         { id: "Stage004", x: 143, y: 50, label: "얼음 절벽", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
+        { id: "Stage003", x: 156, y: 203, label: "버려진 사막", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
         { id: "Stage005", x: 57, y: 126, label: "칠흑 광산", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
         { id: "Stage002", x: 655, y: 200, label: "어둠의 동굴", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' },
-        { id: "Stage006", x: 714, y: 59, label: "호박 광산", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' }
+        { id: "Stage007", x: 469, y: -93, label: "서리 광산", type: 'stage', reqLevel: 0, color: '#4CAF50', icon: 'field' }
     ],
     edges: [
         ["Stage000", "Stage003"],
@@ -3945,10 +4043,11 @@ const worldMapData = {
         ["Stage001", "Stage002"],
         ["Stage001", "Stage003"],
         ["Stage001", "Stage004"],
-        ["Stage003", "Stage005"],
+        ["Stage001", "Stage006"],
+        ["Stage006", "Stage002"],
         ["Stage004", "Stage005"],
-        ["Stage002", "Stage006"],
-        ["Stage006", "Stage001"]
+        ["Stage003", "Stage005"],
+        ["Stage001", "Stage007"]
     ]
 };
 
@@ -4147,6 +4246,7 @@ document.addEventListener('keydown', (e) => {
             } else {
                 showWorldMap = true;
                 worldMapHoverNode = null;
+                worldMapPan = { x: 0, y: 0 };
             }
             break;
         case 'Escape':
@@ -4209,6 +4309,7 @@ canvas.addEventListener('click', (e) => {
         mouseY <= worldMapButtonBounds.y + worldMapButtonBounds.height) {
         showWorldMap = true;
         worldMapHoverNode = null;
+        worldMapPan = { x: 0, y: 0 };
         return;
     }
 
@@ -4221,12 +4322,40 @@ canvas.addEventListener('click', (e) => {
     }
 });
 
-// 마우스 무브 이벤트 (월드맵 호버)
+// 월드맵 드래그 시작
+canvas.addEventListener('mousedown', (e) => {
+    if (!showWorldMap) return;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const panelW = 800, panelH = 480;
+    const panelX = canvas.width / 2 - panelW / 2;
+    const panelY = canvas.height / 2 - panelH / 2;
+    // 패널 내부에서만 드래그 허용
+    if (mouseX >= panelX + 10 && mouseX <= panelX + panelW - 10 &&
+        mouseY >= panelY + 50 && mouseY <= panelY + panelH) {
+        worldMapDragging = true;
+        worldMapDragStart = { x: mouseX, y: mouseY };
+        worldMapPanStart = { x: worldMapPan.x, y: worldMapPan.y };
+    }
+});
+
+// 월드맵 드래그 끝
+canvas.addEventListener('mouseup', () => {
+    worldMapDragging = false;
+});
+
+// 마우스 무브 이벤트 (월드맵 호버 + 드래그)
 canvas.addEventListener('mousemove', (e) => {
     if (!showWorldMap) return;
     const rect = canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
+    if (worldMapDragging) {
+        worldMapPan.x = worldMapPanStart.x + (mouseX - worldMapDragStart.x);
+        worldMapPan.y = worldMapPanStart.y + (mouseY - worldMapDragStart.y);
+        return;
+    }
     handleWorldMapMouseMove(mouseX, mouseY);
 });
 
@@ -4660,7 +4789,7 @@ function drawUI() {
     ctx.fillStyle = '#ffd700';
     ctx.font = 'bold 13px MaplestoryOTFBold';
     ctx.textAlign = 'center';
-    ctx.fillText(`${stageNum}. ${stageName}`, canvas.width - 95, 30);
+    ctx.fillText(stageName, canvas.width - 95, 30);
     ctx.textAlign = 'left';
 
     // 코인 표시
@@ -5681,9 +5810,15 @@ function drawWorldMap() {
     ctx.fillText('X', closeBtnX + 12.5, closeBtnY + 18);
 
 
-    // 맵 영역 오프셋 (패널 내부 좌표 → 캔버스 좌표)
-    const mapOffsetX = panelX + (panelW - 800) / 2;
-    const mapOffsetY = panelY + 30;
+    // 맵 영역 오프셋 (패널 내부 좌표 → 캔버스 좌표) + 팬
+    const mapOffsetX = panelX + (panelW - 800) / 2 + worldMapPan.x;
+    const mapOffsetY = panelY + 30 + worldMapPan.y;
+
+    // 패널 내부만 그리도록 클리핑
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(panelX + 10, panelY + 50, panelW - 20, panelH - 60);
+    ctx.clip();
 
     const nodes = worldMapData.nodes;
     const edges = worldMapData.edges;
@@ -5826,6 +5961,8 @@ function drawWorldMap() {
             drawWorldMapTooltip(ctx, mapOffsetX + node.x, mapOffsetY + node.y, node);
         }
     }
+
+    ctx.restore(); // 클리핑 해제
 
     ctx.textAlign = 'left';
 }
@@ -5981,9 +6118,13 @@ function handleWorldMapClick(mouseX, mouseY) {
         return;
     }
 
+    // 드래그 중이었으면 클릭 무시
+    const dragDist = Math.abs(mouseX - worldMapDragStart.x) + Math.abs(mouseY - worldMapDragStart.y);
+    if (dragDist > 5) return;
+
     // 노드 클릭
-    const mapOffsetX = panelX + (panelW - 800) / 2;
-    const mapOffsetY = panelY + 30;
+    const mapOffsetX = panelX + (panelW - 800) / 2 + worldMapPan.x;
+    const mapOffsetY = panelY + 30 + worldMapPan.y;
 
     for (const node of worldMapData.nodes) {
         const nx = mapOffsetX + node.x;
@@ -6030,8 +6171,8 @@ function handleWorldMapMouseMove(mouseX, mouseY) {
     const panelH = 480;
     const panelX = canvas.width / 2 - panelW / 2;
     const panelY = canvas.height / 2 - panelH / 2;
-    const mapOffsetX = panelX + (panelW - 800) / 2;
-    const mapOffsetY = panelY + 30;
+    const mapOffsetX = panelX + (panelW - 800) / 2 + worldMapPan.x;
+    const mapOffsetY = panelY + 30 + worldMapPan.y;
 
     worldMapHoverNode = null;
     for (const node of worldMapData.nodes) {

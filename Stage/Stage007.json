@@ -1,6 +1,6 @@
 {
-  "number": 1,
-  "displayName": "초원 지대",
+  "number": 7,
+  "displayName": "서리 광산",
   "playerStart": {
     "x": 100,
     "y": 710
@@ -324,40 +324,10 @@
   ],
   "portals": [
     {
-      "x": 280,
-      "y": 620,
-      "targetStage": "Stage002",
-      "label": "어둠의 동굴"
-    },
-    {
-      "x": 360,
-      "y": 620,
-      "targetStage": "Stage003",
-      "label": "버려진 사막"
-    },
-    {
-      "x": 1520,
-      "y": 496,
-      "targetStage": "Stage000",
-      "label": "나뭇잎 마을"
-    },
-    {
-      "x": 110,
-      "y": 366,
-      "targetStage": "Stage004",
-      "label": "얼음 절벽"
-    },
-    {
-      "x": 1450,
-      "y": 596,
-      "targetStage": "Stage006",
-      "label": "호박 광산"
-    },
-    {
-      "x": 130,
-      "y": 626,
-      "targetStage": "Stage007",
-      "label": "서리 광산"
+      "x": 1550,
+      "y": 346,
+      "targetStage": "Stage001",
+      "label": "초원 지대"
     }
   ],
   "spawners": [

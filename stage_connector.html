@@ -2559,7 +2559,7 @@ function leRender() {
     // 포탈
     leStageData.portals.forEach((p, i) => {
         const sel = leSelectedObject && leSelectedObject.type === 'portal' && leSelectedObject.index === i;
-        leDrawPortal(p.x, p.y, p.targetStage, sel);
+        leDrawPortal(p.x, p.y, p.targetStage, sel, p.label);
     });
     // 스포너
     leStageData.spawners.forEach((s, i) => {
@@ -2636,7 +2636,7 @@ function leDrawItem(x, y, type, sel) {
 }
 
 // 포탈 그리기
-function leDrawPortal(x, y, targetStage, sel) {
+function leDrawPortal(x, y, targetStage, sel, label) {
     ctx.save();
     ctx.fillStyle = 'rgba(138,43,226,0.7)'; ctx.beginPath(); ctx.ellipse(x, y-25, 25, 35, 0, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = 'rgba(75,0,130,0.8)'; ctx.beginPath(); ctx.ellipse(x, y-25, 15, 25, 0, 0, Math.PI*2); ctx.fill();
@@ -2645,6 +2645,10 @@ function leDrawPortal(x, y, targetStage, sel) {
     ctx.fillStyle = '#ffff00'; ctx.font = 'bold 11px Arial'; ctx.textBaseline = 'alphabetic';
     const dn = String(targetStage).length > 12 ? String(targetStage).substring(0, 10) + '..' : targetStage;
     ctx.fillText('\u2192 ' + dn, x, y + 15);
+    if (label) {
+        ctx.fillStyle = '#fff'; ctx.font = '10px Arial';
+        ctx.fillText(label, x, y + 28);
+    }
     if (sel) { ctx.strokeStyle = '#ff0'; ctx.lineWidth = 2; ctx.strokeRect(x-30, y-65, 60, 100); }
     ctx.restore();
 }
