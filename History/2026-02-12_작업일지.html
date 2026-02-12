@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Project03 작업일지 - 2026-02-12</title>
+<style>
+  body { font-family: 'Malgun Gothic', sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; color: #222; line-height: 1.7; }
+  h1 { border-bottom: 3px solid #333; padding-bottom: 10px; font-size: 24px; }
+  h2 { color: #1a5276; border-left: 4px solid #1a5276; padding-left: 10px; margin-top: 30px; font-size: 18px; }
+  h3 { color: #2c3e50; margin-top: 20px; font-size: 15px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+  th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; font-size: 13px; }
+  th { background: #f0f0f0; }
+  code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+  .tag { display: inline-block; background: #e8f4fd; color: #1a5276; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin: 2px; }
+  .commit { background: #f9f9f9; border: 1px solid #ddd; padding: 10px 15px; border-radius: 5px; margin: 10px 0; font-size: 13px; }
+  .commit code { background: #e8e8e8; font-weight: bold; }
+  ul { padding-left: 20px; }
+  li { margin: 4px 0; font-size: 14px; }
+  .summary { background: #fffde7; border: 1px solid #f9e547; padding: 15px; border-radius: 5px; margin: 15px 0; }
+  @media print { body { margin: 20px; } }
+</style>
+</head>
+<body>
+
+<h1>Project03 작업일지 - 2026년 2월 12일</h1>
+<p><strong>프로젝트:</strong> 메이플스토리 스타일 2D 플랫포머 RPG<br>
+<strong>GitHub:</strong> superjbw/supreme-meme (main 브랜치)<br>
+<strong>작업 도구:</strong> Claude Code (Opus 4.6)</p>
+
+<h2>1. 노드 타입 시스템 추가</h2>
+<p>stage_connector.html과 game.js의 월드맵 노드에 3가지 타입을 추가하여 <strong>모양으로 시각 구분</strong>할 수 있게 함.</p>
+<table>
+  <tr><th>타입</th><th>모양</th><th>용도</th></tr>
+  <tr><td>lobby</td><td>원형</td><td>마을/안전지대</td></tr>
+  <tr><td>stage</td><td>둥근 사각형</td><td>일반 스테이지</td></tr>
+  <tr><td>dungeon</td><td>다이아몬드(마름모)</td><td>던전</td></tr>
+</table>
+<h3>수정 내용</h3>
+<ul>
+  <li><code>NODE_TYPES</code> 상수 추가</li>
+  <li><code>addNode()</code> — type 파라미터 추가 (기본값 'stage')</li>
+  <li><code>buildNodePath()</code> / <code>buildGameNodePath()</code> — 타입별 모양 패스 생성 함수</li>
+  <li><code>drawNodes()</code> — 타입별 렌더링 + 타입 뱃지 표시</li>
+  <li><code>hitTestNode()</code> — 타입별 히트테스트 (원/AABB/마름모)</li>
+  <li>속성 패널에 타입 선택 드롭다운 추가</li>
+  <li><code>generateWorldMapCode()</code> — export 시 type 필드 포함</li>
+  <li><code>buildNodesFromStageData()</code> — import 시 type 반영</li>
+  <li>game.js <code>worldMapData</code> — 각 노드에 type 필드 추가</li>
+  <li>game.js <code>drawWorldMap()</code> — 타입별 모양 렌더링, 클릭/호버 히트테스트 적용</li>
+</ul>
+
+<h2>2. 노드 ID 변경 시 옛 파일 자동 삭제</h2>
+<ul>
+  <li>속성 패널에서 노드 ID 변경 시 <code>stageFileHandles</code> 초기화</li>
+  <li><code>folderHandle.removeEntry(oldId + '.json')</code>로 옛 Stage JSON 파일 자동 삭제</li>
+</ul>
+
+<h2>3. 노드 복사 붙여넣기 기능</h2>
+<table>
+  <tr><th>단축키</th><th>기능</th></tr>
+  <tr><td>Ctrl+C</td><td>선택된 노드 복사 (포탈 제외)</td></tr>
+  <tr><td>Ctrl+V</td><td>현재 카메라 위치에 붙여넣기</td></tr>
+</table>
+<ul>
+  <li>복사 항목: 라벨, 타입, 색상, 아이콘, 요구 레벨, 몬스터, 스테이지 데이터(플랫폼/몬스터/아이템/배경)</li>
+  <li>제외 항목: 포탈 (빈 배열로 초기화), 엣지 연결</li>
+  <li>붙여넣기 시 ID 자동 생성, 라벨에 "(복사)" 추가</li>
+</ul>
+
+<h2>4. patchGameJs() 신규 스테이지 자동 추가</h2>
+<p>기존에는 "⚡ game.js 적용" 버튼이 worldMapData와 포탈만 패치했으나, <strong>stages 객체에 없는 신규 스테이지를 자동 추가</strong>하는 3단계 패치로 확장.</p>
+<table>
+  <tr><th>단계</th><th>내용</th></tr>
+  <tr><td>1</td><td><code>worldMapData</code> 교체 (노드/엣지)</td></tr>
+  <tr><td>2</td><td>기존 스테이지의 <code>portals</code> 배열 교체</td></tr>
+  <tr><td>3</td><td><code>stages</code> 객체에 없는 신규 스테이지 자동 추가 (신규)</td></tr>
+</table>
+<h3>배경</h3>
+<p>Stage004(얼음 절벽), Stage005(칠흑 광산)가 Stage JSON 파일과 worldMapData에는 존재했으나 <code>stages</code> 객체에 누락되어 포탈 라벨이 ID로 표시되고 워프가 불가능한 문제 발생. 수동 추가 후 재발 방지를 위해 자동 추가 로직 구현.</p>
+
+<h2>5. 레벨 에디터 포탈 라벨 표시</h2>
+<ul>
+  <li>stage_connector 레벨 에디터에서 포탈 아래에 라벨(displayName) 출력 추가</li>
+  <li>읽기 전용 (편집 기능 없음)</li>
+</ul>
+
+<h2>6. 월드맵 드래그 팬 기능</h2>
+<p>게임 내 월드맵(M키)에서 노드가 패널 영역을 벗어나는 문제 해결.</p>
+<ul>
+  <li>마우스 드래그로 맵 자유 이동 (<code>worldMapPan</code>, <code>worldMapDragging</code>)</li>
+  <li>패널 내부 클리핑 적용 (넘어가는 노드/연결선 깔끔하게 잘림)</li>
+  <li>드래그 후 클릭 오인식 방지 (거리 체크)</li>
+  <li>월드맵 열 때마다 팬 초기화</li>
+</ul>
+
+<h2>7. HUD 스테이지 표시 변경</h2>
+<ul>
+  <li>변경 전: <code>0. 나뭇잎 마을</code> (번호 + 라벨)</li>
+  <li>변경 후: <code>나뭇잎 마을</code> (라벨만)</li>
+</ul>
+
+<h2>스테이지 현황</h2>
+<table>
+  <tr><th>ID</th><th>displayName</th><th>number</th></tr>
+  <tr><td>Stage000</td><td>나뭇잎 마을</td><td>0</td></tr>
+  <tr><td>Stage001</td><td>초원 지대</td><td>1</td></tr>
+  <tr><td>Stage002</td><td>어둠의 동굴</td><td>2</td></tr>
+  <tr><td>Stage003</td><td>버려진 사막</td><td>3</td></tr>
+  <tr><td>Stage004</td><td>얼음 절벽</td><td>4</td></tr>
+  <tr><td>Stage005</td><td>칠흑 광산</td><td>5</td></tr>
+  <tr><td>Stage006</td><td>호박 광산</td><td>6</td></tr>
+  <tr><td>Stage007</td><td>서리 광산</td><td>7</td></tr>
+</table>
+
+<h2>커밋 이력</h2>
+<div class="commit">
+  <code>118a3f4</code> Add node type system, copy-paste, and auto stage patching
+</div>
+<div class="commit">
+  <code>8c562df</code> Add world map drag-pan, portal label display, and UI cleanup
+</div>
+
+<h2>수정 파일 요약</h2>
+<table>
+  <tr><th>파일</th><th>주요 변경</th></tr>
+  <tr><td>stage_connector.html</td><td>노드 타입, 복사붙여넣기, ID 변경 시 파일 삭제, 포탈 라벨 표시, patchGameJs 3단계 패치</td></tr>
+  <tr><td>game.js</td><td>노드 타입 렌더링, Stage004~007 추가, 월드맵 드래그 팬, HUD 라벨만 표시</td></tr>
+  <tr><td>Stage/*.json</td><td>Stage004~007 신규 추가, 포탈 동기화</td></tr>
+</table>
+
+<div class="summary">
+  <strong>오늘의 교훈:</strong> 스테이지 복사로 확장할 때 <code>stages</code> 객체 등록이 누락되면 포탈 라벨/워프가 깨진다. patchGameJs()에 자동 추가 로직을 넣어 해결.
+</div>
+
+</body>
+</html>
